@@ -1,0 +1,90 @@
+[gd_scene load_steps=2 format=2]
+
+[ext_resource path="res://addons/Painter2D/tex_selection_button.gd" type="Script" id=1]
+
+[node name="tex_selection" type="GridContainer"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+margin_right = -869.0
+margin_bottom = -457.0
+rect_min_size = Vector2( 30, 30 )
+size_flags_horizontal = 3
+size_flags_vertical = 3
+columns = 2
+script = ExtResource( 1 )
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="btn" type="Button" parent="."]
+margin_right = 131.0
+margin_bottom = 119.0
+focus_mode = 0
+size_flags_horizontal = 3
+size_flags_vertical = 3
+toggle_mode = true
+pressed = true
+enabled_focus_mode = 0
+
+[node name="bg" type="ColorRect" parent="btn"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+color = Color( 1, 1, 1, 0.388235 )
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="tex" type="TextureRect" parent="btn"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+expand = true
+stretch_mode = 6
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="cross" type="Position2D" parent="btn/tex"]
+
+[node name="oriz" type="Line2D" parent="btn/tex/cross"]
+points = PoolVector2Array( -10, 0, 10, 0 )
+width = 1.0
+default_color = Color( 1, 0.976471, 0.4, 1 )
+
+[node name="vert" type="Line2D" parent="btn/tex/cross"]
+points = PoolVector2Array( 0, -10, 0, 10 )
+width = 1.0
+default_color = Color( 1, 0.976471, 0.4, 1 )
+
+[node name="id" type="Label" parent="btn"]
+margin_right = 8.0
+margin_bottom = 14.0
+text = "0"
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="vsl" type="VSlider" parent="."]
+margin_left = 135.0
+margin_right = 151.0
+margin_bottom = 119.0
+min_value = -1.0
+max_value = 1.0
+step = 0.01
+
+[node name="hsl" type="HSlider" parent="."]
+margin_top = 123.0
+margin_right = 131.0
+margin_bottom = 139.0
+min_value = -1.0
+max_value = 1.0
+step = 0.01
+
+[node name="btn_reset" type="Button" parent="."]
+margin_left = 135.0
+margin_top = 123.0
+margin_right = 155.0
+margin_bottom = 143.0
+rect_min_size = Vector2( 20, 20 )
+text = "R"

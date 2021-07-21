@@ -1,0 +1,369 @@
+[gd_scene load_steps=4 format=2]
+
+[ext_resource path="res://addons/Painter2D/painter_dock.gd" type="Script" id=1]
+[ext_resource path="res://addons/Painter2D/tex_selection_button.tscn" type="PackedScene" id=2]
+[ext_resource path="res://addons/Painter2D/tex_selection_button.gd" type="Script" id=3]
+
+[node name="Painter" type="VBoxContainer"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+margin_right = -824.0
+script = ExtResource( 1 )
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="tools" type="VBoxContainer" parent="."]
+margin_right = 332.0
+margin_bottom = 66.0
+
+[node name="lb" type="Label" parent="tools"]
+margin_right = 332.0
+margin_bottom = 14.0
+text = "tools"
+align = 1
+valign = 1
+
+[node name="scatter_paint" type="HBoxContainer" parent="tools"]
+margin_top = 18.0
+margin_right = 332.0
+margin_bottom = 38.0
+
+[node name="lb" type="Label" parent="tools/scatter_paint"]
+margin_top = 3.0
+margin_bottom = 17.0
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="opt_mode" type="OptionButton" parent="tools/scatter_paint"]
+margin_left = 4.0
+margin_right = 63.0
+margin_bottom = 20.0
+text = "Next"
+items = [ "Random", null, false, 0, null, "Next", null, false, 1, null, "Single", null, false, 2, null ]
+selected = 1
+
+[node name="activate" type="Button" parent="tools/scatter_paint"]
+margin_left = 67.0
+margin_right = 300.0
+margin_bottom = 20.0
+size_flags_horizontal = 3
+toggle_mode = true
+text = "Paint"
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="color" type="ColorPickerButton" parent="tools/scatter_paint"]
+margin_left = 304.0
+margin_right = 332.0
+margin_bottom = 20.0
+rect_min_size = Vector2( 28, 0 )
+color = Color( 1, 0, 0, 0.3 )
+
+[node name="radius" type="HBoxContainer" parent="tools"]
+margin_top = 42.0
+margin_right = 332.0
+margin_bottom = 66.0
+
+[node name="lb_spac" type="Label" parent="tools/radius"]
+margin_top = 5.0
+margin_right = 48.0
+margin_bottom = 19.0
+text = "Spacing"
+
+[node name="spacing" type="LineEdit" parent="tools/radius"]
+margin_left = 52.0
+margin_right = 110.0
+margin_bottom = 24.0
+text = "50"
+
+[node name="lb_px" type="Label" parent="tools/radius"]
+margin_left = 114.0
+margin_top = 5.0
+margin_right = 129.0
+margin_bottom = 19.0
+text = "px"
+
+[node name="VSeparator" type="VSeparator" parent="tools/radius"]
+margin_left = 133.0
+margin_right = 137.0
+margin_bottom = 24.0
+
+[node name="lb_delete" type="Label" parent="tools/radius"]
+margin_left = 141.0
+margin_top = 5.0
+margin_right = 230.0
+margin_bottom = 19.0
+text = "Delete Radius"
+
+[node name="slider" type="HSlider" parent="tools/radius"]
+margin_left = 234.0
+margin_right = 270.0
+margin_bottom = 16.0
+size_flags_horizontal = 3
+min_value = 5.0
+max_value = 150.0
+step = 5.0
+value = 40.0
+
+[node name="val" type="LineEdit" parent="tools/radius"]
+margin_left = 274.0
+margin_right = 332.0
+margin_bottom = 24.0
+text = "40"
+align = 2
+
+[node name="hs01" type="HSeparator" parent="."]
+margin_top = 70.0
+margin_right = 332.0
+margin_bottom = 74.0
+
+[node name="btn_sett" type="ToolButton" parent="."]
+margin_top = 78.0
+margin_right = 332.0
+margin_bottom = 100.0
+focus_mode = 0
+enabled_focus_mode = 0
+text = "Settings"
+
+[node name="settings" type="VBoxContainer" parent="."]
+margin_top = 104.0
+margin_right = 332.0
+margin_bottom = 180.0
+
+[node name="scale" type="HBoxContainer" parent="settings"]
+margin_right = 332.0
+margin_bottom = 24.0
+
+[node name="lb" type="Label" parent="settings/scale"]
+margin_top = 5.0
+margin_right = 60.0
+margin_bottom = 19.0
+rect_min_size = Vector2( 60, 0 )
+text = "Scale"
+align = 2
+valign = 1
+
+[node name="val" type="LineEdit" parent="settings/scale"]
+margin_left = 64.0
+margin_right = 122.0
+margin_bottom = 24.0
+text = "1"
+align = 2
+
+[node name="lb2" type="Label" parent="settings/scale"]
+margin_left = 126.0
+margin_top = 5.0
+margin_right = 157.0
+margin_bottom = 19.0
+text = "Rand"
+align = 2
+valign = 1
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="rand_sl" type="HSlider" parent="settings/scale"]
+margin_left = 161.0
+margin_top = 4.0
+margin_right = 270.0
+margin_bottom = 20.0
+size_flags_horizontal = 3
+size_flags_vertical = 4
+max_value = 1.0
+step = 0.1
+
+[node name="rand_val" type="LineEdit" parent="settings/scale"]
+margin_left = 274.0
+margin_right = 332.0
+margin_bottom = 24.0
+text = "0"
+align = 2
+
+[node name="rotation" type="HBoxContainer" parent="settings"]
+margin_top = 28.0
+margin_right = 332.0
+margin_bottom = 52.0
+
+[node name="lb" type="Label" parent="settings/rotation"]
+margin_top = 5.0
+margin_right = 60.0
+margin_bottom = 19.0
+rect_min_size = Vector2( 60, 0 )
+text = "Rotation"
+align = 2
+valign = 1
+
+[node name="val" type="LineEdit" parent="settings/rotation"]
+margin_left = 64.0
+margin_right = 122.0
+margin_bottom = 24.0
+text = "0"
+align = 2
+
+[node name="lb2" type="Label" parent="settings/rotation"]
+margin_left = 126.0
+margin_top = 5.0
+margin_right = 157.0
+margin_bottom = 19.0
+text = "Rand"
+align = 2
+valign = 1
+
+[node name="rand_sl" type="HSlider" parent="settings/rotation"]
+margin_left = 161.0
+margin_top = 4.0
+margin_right = 270.0
+margin_bottom = 20.0
+size_flags_horizontal = 3
+size_flags_vertical = 4
+max_value = 1.0
+step = 0.1
+
+[node name="rand_val" type="LineEdit" parent="settings/rotation"]
+margin_left = 274.0
+margin_right = 332.0
+margin_bottom = 24.0
+text = "0"
+align = 2
+
+[node name="folder" type="HBoxContainer" parent="settings"]
+margin_top = 56.0
+margin_right = 332.0
+margin_bottom = 76.0
+
+[node name="lb" type="Label" parent="settings/folder"]
+margin_top = 3.0
+margin_right = 80.0
+margin_bottom = 17.0
+rect_min_size = Vector2( 80, 0 )
+text = "folder"
+align = 2
+valign = 1
+
+[node name="btn" type="Button" parent="settings/folder"]
+margin_left = 84.0
+margin_right = 332.0
+margin_bottom = 20.0
+size_flags_horizontal = 3
+size_flags_vertical = 3
+text = "res://"
+align = 0
+
+[node name="fold_select" type="FileDialog" parent="settings"]
+margin_top = 108.0
+margin_right = 500.0
+margin_bottom = 458.0
+rect_min_size = Vector2( 500, 350 )
+window_title = "Open a Directory"
+resizable = true
+dialog_hide_on_ok = true
+mode = 2
+
+[node name="hs02" type="HSeparator" parent="."]
+margin_top = 184.0
+margin_right = 332.0
+margin_bottom = 188.0
+
+[node name="grid_col" type="HBoxContainer" parent="."]
+margin_top = 192.0
+margin_right = 332.0
+margin_bottom = 216.0
+
+[node name="ck_offset" type="CheckBox" parent="grid_col"]
+margin_right = 67.0
+margin_bottom = 24.0
+focus_mode = 0
+text = "Offset"
+
+[node name="lb" type="Label" parent="grid_col"]
+margin_left = 71.0
+margin_top = 5.0
+margin_right = 98.0
+margin_bottom = 19.0
+text = "Cols"
+
+[node name="spin_grid" type="SpinBox" parent="grid_col"]
+margin_left = 102.0
+margin_right = 176.0
+margin_bottom = 24.0
+min_value = 1.0
+max_value = 5.0
+value = 3.0
+
+[node name="lb2" type="Label" parent="grid_col"]
+margin_left = 180.0
+margin_top = 5.0
+margin_right = 254.0
+margin_bottom = 19.0
+text = "Icon Height"
+
+[node name="spin_grid_height" type="SpinBox" parent="grid_col"]
+margin_left = 258.0
+margin_right = 332.0
+margin_bottom = 24.0
+min_value = 1.0
+max_value = 5.0
+value = 1.0
+
+[node name="textures" type="ScrollContainer" parent="."]
+margin_top = 220.0
+margin_right = 332.0
+margin_bottom = 484.0
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="grid" type="GridContainer" parent="textures"]
+margin_right = 332.0
+margin_bottom = 50.0
+size_flags_horizontal = 3
+columns = 3
+
+[node name="tex_selection" type="GridContainer" parent="textures/grid" instance=ExtResource( 2 )]
+margin_right = 110.0
+margin_bottom = 50.0
+rect_min_size = Vector2( 30, 30 )
+size_flags_horizontal = 3
+size_flags_vertical = 3
+script = ExtResource( 3 )
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="hs03" type="HSeparator" parent="."]
+margin_top = 488.0
+margin_right = 332.0
+margin_bottom = 492.0
+
+[node name="infos" type="RichTextLabel" parent="."]
+margin_top = 496.0
+margin_right = 332.0
+margin_bottom = 576.0
+focus_mode = 2
+size_flags_vertical = 3
+size_flags_stretch_ratio = 0.3
+selection_enabled = true
+
+[node name="bott" type="HBoxContainer" parent="."]
+margin_top = 580.0
+margin_right = 332.0
+margin_bottom = 600.0
+
+[node name="show_info" type="Button" parent="bott"]
+margin_right = 164.0
+margin_bottom = 20.0
+size_flags_horizontal = 3
+text = "Show / Hide Infos"
+
+[node name="btn_disable" type="Button" parent="bott"]
+margin_left = 168.0
+margin_right = 332.0
+margin_bottom = 20.0
+size_flags_horizontal = 3
+toggle_mode = true
+text = "Disable Plugin"
+__meta__ = {
+"_edit_use_anchors_": false
+}
