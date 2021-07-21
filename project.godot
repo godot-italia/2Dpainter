@@ -12,7 +12,7 @@ _global_script_classes=[ {
 "base": "Node2D",
 "class": "Painter2D",
 "language": "GDScript",
-"path": "res://addons/Painter2D/painter_tool.gd"
+"path": "res://addons/Painter2D/painter_node.gd"
 } ]
 _global_script_class_icons={
 "Painter2D": "res://addons/Painter2D/graphics/painter2d_ico.png"
@@ -23,10 +23,6 @@ _global_script_class_icons={
 config/name="2D painter"
 run/main_scene="res://demo_scene.tscn"
 config/icon="res://icon.png"
-
-[editor_plugins]
-
-enabled=PoolStringArray( "res://addons/Painter2D/plugin.cfg" )
 
 [physics]
 

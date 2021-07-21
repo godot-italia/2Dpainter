@@ -6,12 +6,8 @@ var painter_node : Painter2D
 var parent_node
 var view_transform : Transform2D
 var mouse_loc_pos : Vector2
+var mouse_glb_pos : Vector2
 
-
-
-const sprite_dirs = ["res://entities/", "res://entities/grass/"]
-var rand_sprites_collection = []
-var rand_sprite_texture : Texture = load("res://entities/PH_tree_Bg00_01.png")
 
 var label = Label.new()
 var font = label.get_font("")
@@ -20,23 +16,12 @@ var font = label.get_font("")
 #================================= INIT ========================================
 func _enter_tree():
 	dock = preload("res://addons/Painter2D/painter_dock.tscn").instance()
-	load_sprites_from_dirs()
 
 
 func _exit_tree():
 	if dock:
 		remove_control_from_docks(dock)
 		dock.queue_free()
-
-
-func load_sprites_from_dirs():
-	
-	pass
-
-
-func make_visible(visible):
-	
-	pass
 
 
 #============================= HANDLES TOOL ====================================
@@ -64,6 +49,7 @@ var prev_stored_pos : Vector2
 
 var mouse_event_pos : Vector2
 func forward_canvas_gui_input(event):
+	update_overlays()
 	#--- grab the inputs only if the tool is painting
 	if not dock:
 		return false
@@ -97,14 +83,14 @@ func forward_canvas_gui_input(event):
 			elif ctrl_pressed:
 				sprite_custom_scale_add(0.2)
 			else:
-				dock.select_next_texture()
+				dock.set_next_texture()
 		elif event.button_index == BUTTON_WHEEL_DOWN and event.is_pressed():
 			if mouse_right_pressed:
 				paint_radius_add(-5)
 			elif ctrl_pressed:
 				sprite_custom_scale_add(-0.2)
 			else:
-				dock.select_next_texture()
+				dock.set_next_texture(-1)
 	if event is InputEventMouseMotion:
 		if mouse_left_pressed and dock.is_painting:
 			if prev_stored_pos != Vector2.ZERO:
@@ -128,18 +114,15 @@ func forward_canvas_gui_input(event):
 func forward_canvas_draw_over_viewport(overlay):
 	#--- global vars
 	mouse_loc_pos = overlay.get_local_mouse_position()
+	mouse_glb_pos = overlay.get_global_mouse_position()
 	view_transform = painter_node.get_viewport_transform()
-	
-	#--- unseful infos
-	var info_text = \
-"""mouse_loc_pos: %s
-Painter2D.view_transf: %s
-"""%[mouse_loc_pos, view_transform]
-
-	dock.info_panel.text = info_text
+	dock.mouse_loc_pos = mouse_loc_pos
+	dock.view_transform = view_transform
+	dock.update_infos()
 	
 	if not dock.is_painting:
 		return
+	
 	if mouse_right_pressed:
 		draw_paint_circle(overlay, mouse_loc_pos)
 	else:
@@ -149,15 +132,18 @@ Painter2D.view_transf: %s
 func draw_paint_circle(overlay, pos):
 	var scaled_radius = dock.paint_radius * view_transform.get_scale().x
 	overlay.draw_circle(pos, scaled_radius, dock.paint_color)
-	overlay
 
 
 func draw_next_texture(overlay, mouse_loc_pos):
+	if not dock.next_texture:
+#		print("Painter2D: texture missing")
+		dock.set_next_texture()
+		return
 	var tex_size = dock.next_texture.get_size()
 	var scaled_tex = tex_size * view_transform.get_scale() * dock.custom_scale
 	var tex_pos = mouse_loc_pos - scaled_tex/2 - dock.selected_tex_offset_scaled
 	var text_rect = Rect2(tex_pos.x, tex_pos.y, scaled_tex.x, scaled_tex.y)
-#	overlay.draw_set_transform(Vector2.ZERO, PI/2, Vector2.ONE)
+#	overlay.draw_set_transform(mouse_glb_pos, PI/2, Vector2.ONE)
 	overlay.draw_texture_rect(dock.next_texture, text_rect, false, Color(1,1,1,0.3))
 #	overlay.draw_set_transform(Vector2.ZERO, 0, Vector2.ONE)
 #	overlay.draw_set_transform("pos", "rot", "scale")
@@ -176,15 +162,19 @@ func place_new_sprite(global_pos):
 	new_sprite.texture = dock.next_texture
 	new_sprite.global_position = global_pos - dock.selected_tex_offset_scaled
 	new_sprite.scale *= dock.custom_scale
-	var sub_node = parent_node.find_node("trees")
+	
+	var sub_node = parent_node
+	if dock.subnode_name != "":
+		sub_node = parent_node.find_node(dock.subnode_name)
+	
 	if sub_node:
 		sub_node.add_child(new_sprite)
 	else:
 		sub_node = Node2D.new()
-		sub_node.name = "trees"
+		sub_node.name = dock.subnode_name
 		parent_node.add_child(sub_node)
-		sub_node.add_child(new_sprite)
 		sub_node.owner = painter_node.owner
+		sub_node.add_child(new_sprite)
 		
 	new_sprite.owner = painter_node.owner
 	dock.set_next_texture()

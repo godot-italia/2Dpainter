@@ -5,11 +5,15 @@
 tool
 extends VBoxContainer
 
+var mouse_loc_pos
+var view_transform
+
 var mode = NextMode.NEXT
 var is_painting := false
 var paint_color : Color = Color.red - Color(0,0,0,0.7)
 var spacing = 50 setget set_spacing
 var paint_radius : int = 40 setget set_paint_radius
+var subnode_name = ""
 
 var custom_scale : float = 0.5 setget set_custom_scale
 enum NextMode {RAND, NEXT, SINGLE}
@@ -20,6 +24,7 @@ var selected_tex_offset_scaled : Vector2
 
 #--- texture collection
 var tex_id : int = -1
+var tex_full_path := ""
 var next_texture : Texture
 var tex_collection = []
 var tex_collection_selected_ids = []
@@ -37,10 +42,12 @@ onready var scatter_paint_tgg = $tools/scatter_paint/activate
 onready var scatter_paint_color = $tools/scatter_paint/color
 onready var paint_rad_slider = $tools/radius/slider
 onready var paint_rad_le = $tools/radius/val
-
+onready var subnode_ck = $tools/subnode/btn
+onready var subnode_ln = $tools/subnode/val
 
 #--- settings
-onready var ck_offset = $grid_col/ck_offset
+onready var ck_offset = $tex/grid_sets/ck_offset
+onready var folder_btn = $settings/folder/btn
 
 
 #- scattering
@@ -54,9 +61,10 @@ onready var scale_rand_val = $settings/scale/rand_val
 #- rotation
 
 #- selection
-onready var tex_grid = $textures/grid
-onready var folder_btn = $settings/folder/btn
 onready var tex_selection_button = preload("res://addons/Painter2D/tex_selection_button.tscn")
+onready var tex_grid = $tex/grid_cont/grid
+onready var tex_spin_cols = $tex/grid_col/spin_grid
+onready var tex_spin_height = $tex/grid_col/spin_grid_height
 
 
 
@@ -65,8 +73,10 @@ onready var tex_selection_button = preload("res://addons/Painter2D/tex_selection
 func _ready():
 	connect_everything()
 	find_all_textures()
-	set_next_texture()
-	update_dock()
+	select_next_texture()
+	update_settings()
+	update_sprite_grid()
+	update_infos()
 
 
 func connect_everything():
@@ -77,17 +87,27 @@ func connect_everything():
 	paint_rad_le.connect("text_entered", self, "paint_radius_changed")
 	mode_opt.connect("item_selected", self, "mode_selected")
 	
+	subnode_ck.connect("toggled", self, "subnode_ck_toggled")
+	subnode_ln.connect("text_entered", self, "subnode_ln_edited")
+	
 	
 	#settings
-	disable_plugin_btn.connect("toggled", self, "enable_plugin")
+	disable_plugin_btn.connect("pressed", self, "disable_plugin")
 	show_info_btn.connect("pressed", self, "show_hide_infos")
 	
 	ck_offset.connect("toggled", self, "offset_active_toggled")
-	$grid_col/spin_grid.connect("value_changed", self, "change_grid_cols")
-	$grid_col/spin_grid_height.connect("value_changed", self, "change_grid_height")
+	tex_spin_cols.connect("value_changed", self, "change_grid_cols")
+	tex_spin_height.connect("value_changed", self, "change_grid_height")
 	
 	folder_btn.connect("pressed", self, "select_folder_pressed")
 	$settings/fold_select.connect("dir_selected", self, "popup_folder_selected")
+	
+	#- select/deselect all
+	$tex/grid_sets/desel_all.connect("pressed",self, "select_all_tex", [false])
+	$tex/grid_sets/sel_all.connect("pressed",self, "select_all_tex", [true])
+	#- fold/unfold buttons
+	$btn_sett.connect("pressed",self,"settings_visibility_toggled")
+	$btn_tex.connect("pressed",self,"textures_visibility_toggled")
 
 
 func find_all_textures():
@@ -105,23 +125,44 @@ func find_all_textures():
 				tex_collection.append(file)
 	dir.list_dir_end()
 	
-	tex_collection_selected_ids = []
-	for i in range(tex_collection.size()):
-		tex_collection_selected_ids.append(i)
+	tex_collection_selected_ids = range(tex_collection.size())
+
 
 
 #=============================== UTILITIES =====================================
-func set_next_texture():
+func load_tex():
+	if tex_id == -1:
+		tex_id = tex_collection_selected_ids[0]
+	
+	if tex_collection_selected_ids.empty():
+		tex_collection_selected_ids.append(0)
+	
+	var file_path = tex_collection[tex_id]
+	tex_full_path = tex_collection_path + "/" + file_path
+	
+	if tex_collection_path == "res://":
+		tex_full_path = "res://" + file_path
+	
+	if file_path_is_valid(tex_full_path):
+		next_texture = load(tex_full_path)
+	else:
+		print("DOCK| Filepath is invalid: %s"%tex_full_path)
+
+
+func file_path_is_valid(path):
+	var dir = Directory.new()
+	return dir.file_exists(path)
+
+
+func set_next_texture(val = 1):
 	match mode:
-		NextMode.RAND : next_texture = select_random_texture()
-		NextMode.NEXT : next_texture = select_next_texture()
+		NextMode.RAND : select_random_texture()
+		NextMode.NEXT : select_next_texture()
 		NextMode.SINGLE : return
 
 
 func select_next_texture():
 	tex_id += 1
-	if tex_collection_selected_ids.empty():
-		tex_collection_selected_ids.append(0)
 	
 	var max_iter = 300
 	var iter = 0
@@ -131,33 +172,31 @@ func select_next_texture():
 		tex_id += 1
 		if tex_id >= tex_collection.size():
 			tex_id = 0
-	var file_path = tex_collection[tex_id]
-	next_texture = load(tex_collection_path + "/" + file_path)
-	update_selected_tex_offset(tex_id)
-#	return next_texture
+	load_tex()
+	set_selected_tex_offset(tex_id)
 
 
 func select_random_texture():
 	tex_id = tex_collection_selected_ids[randi()%tex_collection_selected_ids.size()]
-	var file_path = tex_collection[tex_id]
-	next_texture = load(tex_collection_path + "/" + file_path)
-#	return next_texture
+	load_tex()
+	set_selected_tex_offset(tex_id)
 
 
-func update_selected_tex_offset(id):
-	if id == tex_id:
+func set_selected_tex_offset(id):
+	if id == tex_id and tex_grid.get_child_count() > 0:
 		selected_tex_offset_scaled = tex_grid.get_child(tex_id).offset_px * custom_scale
+		update_infos()
+
+
+func select_all_tex(val):
+	if tex_grid.get_child_count() > 0:
+		for btn in tex_grid.get_children():
+			btn.selected = val
+		tex_collection_selected_ids = range(tex_collection.size()) if val else [0]
+#		update_selection_for_tex_btns()
+
 
 #============================== UPDATE GUI =====================================
-func update_dock():
-	update_settings()
-	update_sprite_grid()
-	#--- deactivate plugin (DEBUG)
-	var dummy = EditorPlugin.new()
-	disable_plugin_btn.pressed = dummy.get_editor_interface().is_plugin_enabled("Painter2D")
-	dummy.queue_free()
-
-
 func update_settings():
 	paint_rad_slider.value = paint_radius
 	paint_rad_le.text = str(paint_radius)
@@ -186,8 +225,22 @@ func update_sprite_grid():
 		btn.connect("selection_changed", self, "btn_selection_changed")
 		tex_grid.add_child(btn)
 		btn.owner = tex_grid.owner
-	change_grid_height($grid_col/spin_grid_height.value)
+	change_grid_height(tex_spin_height.value)
 	set_next_texture()
+
+
+func update_infos():
+	$infos.text = \
+"""current id: %s
+selected ids: %s
+mouse pos: %s
+offset scaled: %s"""\
+%[tex_id, tex_collection_selected_ids, mouse_loc_pos, selected_tex_offset_scaled]
+
+
+func update_selection_for_tex_btns():
+	for btn in $textures/grid.get_children():
+		btn.selected = btn.id in tex_collection_selected_ids
 
 
 #=========================== CONNECTED FUNCS ===================================
@@ -206,9 +259,9 @@ func set_custom_scale(val):
 	custom_scale = clamp(val, 0.01, 50)
 	update_settings()
 
-func enable_plugin(val):
+func disable_plugin():
 	var dummy = EditorPlugin.new()
-	dummy.get_editor_interface().set_plugin_enabled("Painter2D", val)
+	dummy.get_editor_interface().set_plugin_enabled("Painter2D", false)
 	dummy.queue_free()
 
 func set_spacing(val):
@@ -226,7 +279,7 @@ func btn_selection_changed(id, val):
 		if not id in tex_collection_selected_ids:
 			tex_collection_selected_ids.append(id)
 	tex_collection_selected_ids.sort()
-	print("Selection ids: %s"%[tex_collection_selected_ids])
+#	print("Selection ids: %s"%[tex_collection_selected_ids])
 
 
 func offset_active_toggled(val):
@@ -235,7 +288,7 @@ func offset_active_toggled(val):
 		btn.offset_tool_visible = offset_active
 func change_grid_cols(val):
 	tex_grid.columns = val
-	$grid_col/spin_grid.release_focus()
+	tex_spin_cols.release_focus()
 func change_grid_height(val):
 	var height : int
 	match int(val):
@@ -256,10 +309,23 @@ func select_folder_pressed():
 func popup_folder_selected(path):
 	tex_collection_path = path
 	folder_btn.text = path
-	select_next_texture()
 	find_all_textures()
-	yield(get_tree(), "idle_frame")
 	update_sprite_grid()
+	set_next_texture()
+#	yield(get_tree(), "idle_frame")
 
+func subnode_ck_toggled(val):
+	subnode_name = subnode_ln.text if val else ""
+
+func subnode_ln_edited(text):
+	subnode_name = text
+	if subnode_name == "":
+		subnode_ck.pressed = false
+
+#---- fold / unfold
+func textures_visibility_toggled():
+	$tex.visible = !$tex.visible
+func settings_visibility_toggled():
+	$settings.visible = !$settings.visible
 
 

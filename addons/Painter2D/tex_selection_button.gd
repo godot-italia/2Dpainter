@@ -72,7 +72,7 @@ func hoffset_changed(val):
 func update_offset_px():
 	offset_px.x = (texture.get_size().x * offset_unit.x)/2
 	offset_px.y = (texture.get_size().y * offset_unit.y)/2
-	dock.update_selected_tex_offset(id)
+	dock.set_selected_tex_offset(id)
 
 func btn_toggled(val):
 	self.selected = val
