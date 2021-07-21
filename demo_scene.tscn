@@ -1,6 +1,6 @@
 [gd_scene load_steps=2 format=2]
 
-[ext_resource path="res://addons/Painter2D/painter_tool.gd" type="Script" id=2]
+[ext_resource path="res://addons/Painter2D/painter_node.gd" type="Script" id=2]
 
 [node name="demo_scene" type="Node2D"]
 
@@ -8,5 +8,3 @@
 
 [node name="Painter2D" type="Node2D" parent="decorations"]
 script = ExtResource( 2 )
-
-[node name="trees" type="Node2D" parent="decorations"]
