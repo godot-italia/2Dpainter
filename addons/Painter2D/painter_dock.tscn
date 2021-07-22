@@ -1,6 +1,8 @@
-[gd_scene load_steps=2 format=2]
+[gd_scene load_steps=4 format=2]
 
 [ext_resource path="res://addons/Painter2D/painter_dock.gd" type="Script" id=1]
+[ext_resource path="res://addons/Painter2D/tex_selection_button.gd" type="Script" id=2]
+[ext_resource path="res://addons/Painter2D/tex_selection_button.tscn" type="PackedScene" id=3]
 
 [node name="Painter" type="VBoxContainer"]
 anchor_right = 1.0
@@ -12,39 +14,23 @@ __meta__ = {
 }
 
 [node name="tools" type="VBoxContainer" parent="."]
-margin_right = 312.0
-margin_bottom = 94.0
+margin_right = 311.0
+margin_bottom = 104.0
 
-[node name="lb" type="Label" parent="tools"]
-margin_right = 312.0
-margin_bottom = 14.0
-text = "tools"
-align = 1
-valign = 1
+[node name="paint" type="HBoxContainer" parent="tools"]
+margin_right = 311.0
+margin_bottom = 20.0
 
-[node name="scatter_paint" type="HBoxContainer" parent="tools"]
-margin_top = 18.0
-margin_right = 312.0
-margin_bottom = 38.0
-
-[node name="lb" type="Label" parent="tools/scatter_paint"]
+[node name="lb" type="Label" parent="tools/paint"]
 margin_top = 3.0
 margin_bottom = 17.0
 __meta__ = {
 "_edit_use_anchors_": false
 }
 
-[node name="opt_mode" type="OptionButton" parent="tools/scatter_paint"]
+[node name="activate" type="Button" parent="tools/paint"]
 margin_left = 4.0
-margin_right = 63.0
-margin_bottom = 20.0
-text = "Next"
-items = [ "Random", null, false, 0, null, "Next", null, false, 1, null, "Single", null, false, 2, null ]
-selected = 1
-
-[node name="activate" type="Button" parent="tools/scatter_paint"]
-margin_left = 67.0
-margin_right = 280.0
+margin_right = 216.0
 margin_bottom = 20.0
 size_flags_horizontal = 3
 toggle_mode = true
@@ -53,70 +39,77 @@ __meta__ = {
 "_edit_use_anchors_": false
 }
 
-[node name="color" type="ColorPickerButton" parent="tools/scatter_paint"]
-margin_left = 284.0
-margin_right = 312.0
+[node name="opt_mode" type="OptionButton" parent="tools/paint"]
+margin_left = 220.0
+margin_right = 279.0
+margin_bottom = 20.0
+text = "Next"
+items = [ "Random", null, false, 0, null, "Next", null, false, 1, null, "Single", null, false, 2, null ]
+selected = 1
+
+[node name="color" type="ColorPickerButton" parent="tools/paint"]
+margin_left = 283.0
+margin_right = 311.0
 margin_bottom = 20.0
 rect_min_size = Vector2( 28, 0 )
 color = Color( 1, 0, 0, 0.3 )
 
-[node name="radius" type="HBoxContainer" parent="tools"]
-margin_top = 42.0
-margin_right = 312.0
-margin_bottom = 66.0
+[node name="brush" type="HBoxContainer" parent="tools"]
+margin_top = 24.0
+margin_right = 311.0
+margin_bottom = 48.0
 
-[node name="lb_spac" type="Label" parent="tools/radius"]
+[node name="lb_spac" type="Label" parent="tools/brush"]
 margin_top = 5.0
 margin_right = 48.0
 margin_bottom = 19.0
 text = "Spacing"
 
-[node name="spacing" type="LineEdit" parent="tools/radius"]
+[node name="spac_val" type="LineEdit" parent="tools/brush"]
 margin_left = 52.0
 margin_right = 110.0
 margin_bottom = 24.0
 text = "50"
 
-[node name="lb_px" type="Label" parent="tools/radius"]
+[node name="lb_px" type="Label" parent="tools/brush"]
 margin_left = 114.0
 margin_top = 5.0
 margin_right = 129.0
 margin_bottom = 19.0
 text = "px"
 
-[node name="VSeparator" type="VSeparator" parent="tools/radius"]
+[node name="VSeparator" type="VSeparator" parent="tools/brush"]
 margin_left = 133.0
 margin_right = 137.0
 margin_bottom = 24.0
 
-[node name="lb_delete" type="Label" parent="tools/radius"]
+[node name="lb_delete" type="Label" parent="tools/brush"]
 margin_left = 141.0
 margin_top = 5.0
 margin_right = 230.0
 margin_bottom = 19.0
-text = "Delete Radius"
-
-[node name="slider" type="HSlider" parent="tools/radius"]
-margin_left = 234.0
-margin_right = 250.0
-margin_bottom = 16.0
 size_flags_horizontal = 3
-min_value = 5.0
-max_value = 150.0
-step = 5.0
-value = 40.0
+text = "Delete Radius"
+align = 2
 
-[node name="val" type="LineEdit" parent="tools/radius"]
-margin_left = 254.0
-margin_right = 312.0
+[node name="del_rad" type="LineEdit" parent="tools/brush"]
+margin_left = 234.0
+margin_right = 292.0
 margin_bottom = 24.0
 text = "40"
 align = 2
 
+[node name="lb_px2" type="Label" parent="tools/brush"]
+margin_left = 296.0
+margin_top = 5.0
+margin_right = 311.0
+margin_bottom = 19.0
+text = "px"
+
 [node name="subnode" type="HBoxContainer" parent="tools"]
-margin_top = 70.0
-margin_right = 312.0
-margin_bottom = 94.0
+margin_top = 52.0
+margin_right = 311.0
+margin_bottom = 76.0
 
 [node name="btn" type="CheckBox" parent="tools/subnode"]
 margin_right = 104.0
@@ -125,31 +118,48 @@ text = "add to node"
 
 [node name="val" type="LineEdit" parent="tools/subnode"]
 margin_left = 108.0
-margin_right = 312.0
+margin_right = 311.0
+margin_bottom = 24.0
+size_flags_horizontal = 3
+placeholder_text = "insert node name"
+
+[node name="name" type="HBoxContainer" parent="tools"]
+margin_top = 80.0
+margin_right = 311.0
+margin_bottom = 104.0
+
+[node name="btn" type="CheckBox" parent="tools/name"]
+margin_right = 143.0
+margin_bottom = 24.0
+text = "use custom name"
+
+[node name="val" type="LineEdit" parent="tools/name"]
+margin_left = 147.0
+margin_right = 311.0
 margin_bottom = 24.0
 size_flags_horizontal = 3
 placeholder_text = "insert custom name"
 
 [node name="hs01" type="HSeparator" parent="."]
-margin_top = 98.0
-margin_right = 312.0
-margin_bottom = 102.0
+margin_top = 108.0
+margin_right = 311.0
+margin_bottom = 112.0
 
 [node name="btn_sett" type="ToolButton" parent="."]
-margin_top = 106.0
-margin_right = 312.0
-margin_bottom = 128.0
+margin_top = 116.0
+margin_right = 311.0
+margin_bottom = 138.0
 focus_mode = 0
 enabled_focus_mode = 0
 text = "Settings"
 
 [node name="settings" type="VBoxContainer" parent="."]
-margin_top = 132.0
-margin_right = 312.0
-margin_bottom = 208.0
+margin_top = 142.0
+margin_right = 311.0
+margin_bottom = 218.0
 
 [node name="scale" type="HBoxContainer" parent="settings"]
-margin_right = 312.0
+margin_right = 311.0
 margin_bottom = 24.0
 
 [node name="lb" type="Label" parent="settings/scale"]
@@ -183,7 +193,7 @@ __meta__ = {
 [node name="rand_sl" type="HSlider" parent="settings/scale"]
 margin_left = 161.0
 margin_top = 4.0
-margin_right = 250.0
+margin_right = 249.0
 margin_bottom = 20.0
 size_flags_horizontal = 3
 size_flags_vertical = 4
@@ -191,15 +201,15 @@ max_value = 1.0
 step = 0.1
 
 [node name="rand_val" type="LineEdit" parent="settings/scale"]
-margin_left = 254.0
-margin_right = 312.0
+margin_left = 253.0
+margin_right = 311.0
 margin_bottom = 24.0
 text = "0"
 align = 2
 
 [node name="rotation" type="HBoxContainer" parent="settings"]
 margin_top = 28.0
-margin_right = 312.0
+margin_right = 311.0
 margin_bottom = 52.0
 
 [node name="lb" type="Label" parent="settings/rotation"]
@@ -230,7 +240,7 @@ valign = 1
 [node name="rand_sl" type="HSlider" parent="settings/rotation"]
 margin_left = 161.0
 margin_top = 4.0
-margin_right = 250.0
+margin_right = 249.0
 margin_bottom = 20.0
 size_flags_horizontal = 3
 size_flags_vertical = 4
@@ -238,15 +248,15 @@ max_value = 1.0
 step = 0.1
 
 [node name="rand_val" type="LineEdit" parent="settings/rotation"]
-margin_left = 254.0
-margin_right = 312.0
+margin_left = 253.0
+margin_right = 311.0
 margin_bottom = 24.0
 text = "0"
 align = 2
 
 [node name="folder" type="HBoxContainer" parent="settings"]
 margin_top = 56.0
-margin_right = 312.0
+margin_right = 311.0
 margin_bottom = 76.0
 
 [node name="lb" type="Label" parent="settings/folder"]
@@ -260,7 +270,7 @@ valign = 1
 
 [node name="btn" type="Button" parent="settings/folder"]
 margin_left = 84.0
-margin_right = 312.0
+margin_right = 311.0
 margin_bottom = 20.0
 size_flags_horizontal = 3
 size_flags_vertical = 3
@@ -278,28 +288,64 @@ dialog_hide_on_ok = true
 mode = 2
 
 [node name="hs02" type="HSeparator" parent="."]
-margin_top = 212.0
-margin_right = 312.0
-margin_bottom = 216.0
+margin_top = 222.0
+margin_right = 311.0
+margin_bottom = 226.0
 
 [node name="btn_tex" type="ToolButton" parent="."]
-margin_top = 220.0
-margin_right = 312.0
-margin_bottom = 242.0
+margin_top = 230.0
+margin_right = 311.0
+margin_bottom = 252.0
 focus_mode = 0
 enabled_focus_mode = 0
 text = "Textures"
 
 [node name="tex" type="VBoxContainer" parent="."]
-margin_top = 246.0
-margin_right = 312.0
-margin_bottom = 490.0
+margin_top = 256.0
+margin_right = 311.0
+margin_bottom = 492.0
 size_flags_horizontal = 3
 size_flags_vertical = 3
 
-[node name="grid_sets" type="HBoxContainer" parent="tex"]
-margin_right = 312.0
+[node name="grid_col" type="HBoxContainer" parent="tex"]
+margin_right = 311.0
 margin_bottom = 24.0
+
+[node name="lb" type="Label" parent="tex/grid_col"]
+margin_top = 5.0
+margin_right = 77.0
+margin_bottom = 19.0
+size_flags_horizontal = 3
+text = "Columns"
+align = 2
+
+[node name="spin_grid" type="SpinBox" parent="tex/grid_col"]
+margin_left = 81.0
+margin_right = 155.0
+margin_bottom = 24.0
+min_value = 1.0
+max_value = 5.0
+value = 3.0
+
+[node name="lb2" type="Label" parent="tex/grid_col"]
+margin_left = 159.0
+margin_top = 5.0
+margin_right = 233.0
+margin_bottom = 19.0
+text = "Icon Height"
+
+[node name="spin_grid_height" type="SpinBox" parent="tex/grid_col"]
+margin_left = 237.0
+margin_right = 311.0
+margin_bottom = 24.0
+min_value = 1.0
+max_value = 5.0
+value = 1.0
+
+[node name="grid_sets" type="HBoxContainer" parent="tex"]
+margin_top = 28.0
+margin_right = 311.0
+margin_bottom = 52.0
 
 [node name="ck_offset" type="CheckBox" parent="tex/grid_sets"]
 margin_right = 67.0
@@ -320,87 +366,108 @@ text = "Select All"
 
 [node name="desel_all" type="Button" parent="tex/grid_sets"]
 margin_left = 197.0
-margin_right = 312.0
+margin_right = 311.0
 margin_bottom = 24.0
 size_flags_horizontal = 3
 text = "Deselect all"
 
 [node name="grid_cont" type="ScrollContainer" parent="tex"]
-margin_top = 28.0
-margin_right = 312.0
-margin_bottom = 216.0
+margin_top = 56.0
+margin_right = 311.0
+margin_bottom = 208.0
 size_flags_horizontal = 3
 size_flags_vertical = 3
 
 [node name="grid" type="GridContainer" parent="tex/grid_cont"]
-margin_right = 312.0
+margin_right = 311.0
+margin_bottom = 50.0
 size_flags_horizontal = 3
 columns = 3
 
-[node name="grid_col" type="HBoxContainer" parent="tex"]
-margin_top = 220.0
-margin_right = 312.0
-margin_bottom = 244.0
+[node name="tex_selection" type="GridContainer" parent="tex/grid_cont/grid" instance=ExtResource( 3 )]
+margin_right = 103.0
+margin_bottom = 50.0
+rect_min_size = Vector2( 30, 30 )
+size_flags_horizontal = 3
+size_flags_vertical = 3
+script = ExtResource( 2 )
+__meta__ = {
+"_edit_use_anchors_": false
+}
 
-[node name="lb" type="Label" parent="tex/grid_col"]
+[node name="infos" type="HBoxContainer" parent="tex"]
+margin_top = 212.0
+margin_right = 311.0
+margin_bottom = 236.0
+
+[node name="lb01" type="Label" parent="tex/infos"]
 margin_top = 5.0
-margin_right = 78.0
+margin_right = 62.0
+margin_bottom = 19.0
+text = "current id"
+
+[node name="curr_id" type="LineEdit" parent="tex/infos"]
+margin_left = 66.0
+margin_right = 124.0
+margin_bottom = 24.0
+text = "0"
+editable = false
+
+[node name="lb02" type="Label" parent="tex/infos"]
+margin_left = 128.0
+margin_top = 5.0
+margin_right = 187.0
 margin_bottom = 19.0
 size_flags_horizontal = 3
-text = "Columns"
+text = "offset"
 align = 2
 
-[node name="spin_grid" type="SpinBox" parent="tex/grid_col"]
-margin_left = 82.0
-margin_right = 156.0
+[node name="off_x" type="LineEdit" parent="tex/infos"]
+margin_left = 191.0
+margin_right = 249.0
 margin_bottom = 24.0
-min_value = 1.0
-max_value = 5.0
-value = 3.0
+text = "0"
+editable = false
 
-[node name="lb2" type="Label" parent="tex/grid_col"]
-margin_left = 160.0
-margin_top = 5.0
-margin_right = 234.0
-margin_bottom = 19.0
-text = "Icon Height"
-
-[node name="spin_grid_height" type="SpinBox" parent="tex/grid_col"]
-margin_left = 238.0
-margin_right = 312.0
+[node name="off_y" type="LineEdit" parent="tex/infos"]
+margin_left = 253.0
+margin_right = 311.0
 margin_bottom = 24.0
-min_value = 1.0
-max_value = 5.0
-value = 1.0
+text = "0"
+editable = false
 
 [node name="hs03" type="HSeparator" parent="."]
-margin_top = 494.0
-margin_right = 312.0
-margin_bottom = 498.0
+margin_top = 496.0
+margin_right = 311.0
+margin_bottom = 500.0
 
 [node name="infos" type="RichTextLabel" parent="."]
-margin_top = 502.0
-margin_right = 312.0
+margin_top = 504.0
+margin_right = 311.0
 margin_bottom = 576.0
 focus_mode = 2
 size_flags_vertical = 3
 size_flags_stretch_ratio = 0.3
+text = "current id: 0
+selected ids: [0]
+mouse pos: Null
+offset scaled: (0, 0)"
 selection_enabled = true
 
 [node name="bott" type="HBoxContainer" parent="."]
 margin_top = 580.0
-margin_right = 312.0
+margin_right = 311.0
 margin_bottom = 600.0
 
 [node name="show_info" type="Button" parent="bott"]
-margin_right = 154.0
+margin_right = 153.0
 margin_bottom = 20.0
 size_flags_horizontal = 3
 text = "Show / Hide Infos"
 
 [node name="btn_disable" type="Button" parent="bott"]
-margin_left = 158.0
-margin_right = 312.0
+margin_left = 157.0
+margin_right = 311.0
 margin_bottom = 20.0
 size_flags_horizontal = 3
 text = "Disable Plugin"

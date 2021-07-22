@@ -10,10 +10,12 @@ var view_transform
 
 var mode = NextMode.NEXT
 var is_painting := false
-var paint_color : Color = Color.red - Color(0,0,0,0.7)
+var erase_color : Color = Color.red - Color(0,0,0,0.7)
 var spacing = 50 setget set_spacing
 var paint_radius : int = 40 setget set_paint_radius
 var subnode_name = ""
+
+var custom_name = ""
 
 var custom_scale : float = 0.5 setget set_custom_scale
 enum NextMode {RAND, NEXT, SINGLE}
@@ -31,40 +33,43 @@ var tex_collection_selected_ids = []
 var tex_collection_path = "res://"
 
 #------------- get nodes ----------------
-onready var info_panel = $infos
-onready var disable_plugin_btn = $bott/btn_disable
-onready var show_info_btn = $bott/show_info
-
-#--- brush
-onready var mode_opt = $tools/scatter_paint/opt_mode
-onready var spacing_val = $tools/radius/spacing
-onready var scatter_paint_tgg = $tools/scatter_paint/activate
-onready var scatter_paint_color = $tools/scatter_paint/color
-onready var paint_rad_slider = $tools/radius/slider
-onready var paint_rad_le = $tools/radius/val
+#--- brush tools
+onready var paint_tgg = $tools/paint/activate
+onready var paint_color_selector = $tools/paint/color
+onready var mode_opt = $tools/paint/opt_mode
+onready var spacing_ln = $tools/brush/spac_val
+onready var paint_rad_le = $tools/brush/del_rad
 onready var subnode_ck = $tools/subnode/btn
 onready var subnode_ln = $tools/subnode/val
+onready var name_tgg = $tools/name/btn 
+onready var name_ln = $tools/name/val
 
 #--- settings
 onready var ck_offset = $tex/grid_sets/ck_offset
-onready var folder_btn = $settings/folder/btn
-
-
-#- scattering
-
 
 #- scale
 onready var scale_val = $settings/scale/val
 onready var scale_rand_slider = $settings/scale/rand_sl
 onready var scale_rand_val = $settings/scale/rand_val
-
 #- rotation
 
-#- selection
+#- folder
+onready var folder_btn = $settings/folder/btn
+onready var fold_popup = $settings/fold_select
+
+#--- tex grid
 onready var tex_selection_button = preload("res://addons/Painter2D/tex_selection_button.tscn")
 onready var tex_grid = $tex/grid_cont/grid
 onready var tex_spin_cols = $tex/grid_col/spin_grid
 onready var tex_spin_height = $tex/grid_col/spin_grid_height
+
+onready var btn_select_all = $tex/grid_sets/sel_all
+onready var btn_deselect_all = $tex/grid_sets/desel_all
+
+#--- bottom
+onready var info_panel = $infos
+onready var disable_plugin_btn = $bott/btn_disable
+onready var show_info_btn = $bott/show_info
 
 
 
@@ -81,15 +86,17 @@ func _ready():
 
 func connect_everything():
 	#paint
-	scatter_paint_tgg.connect("toggled",self,"scatter_paint_toggled")
-	scatter_paint_color.connect("color_changed", self, "paint_circle_color_changed")
-	paint_rad_slider.connect("value_changed", self, "paint_radius_changed")
+	paint_tgg.connect("toggled",self,"paint_toggled")
+	paint_color_selector.connect("color_changed", self, "paint_circle_color_changed")
 	paint_rad_le.connect("text_entered", self, "paint_radius_changed")
 	mode_opt.connect("item_selected", self, "mode_selected")
+	scale_val.connect("text_changed",self, "base_scale_changed")
 	
 	subnode_ck.connect("toggled", self, "subnode_ck_toggled")
-	subnode_ln.connect("text_entered", self, "subnode_ln_edited")
+	subnode_ln.connect("text_changed", self, "subnode_ln_edited")
 	
+	name_tgg.connect("toggled",self,"custom_name_toggled")
+	name_ln.connect("text_changed",self,"custom_name_changed")
 	
 	#settings
 	disable_plugin_btn.connect("pressed", self, "disable_plugin")
@@ -100,11 +107,11 @@ func connect_everything():
 	tex_spin_height.connect("value_changed", self, "change_grid_height")
 	
 	folder_btn.connect("pressed", self, "select_folder_pressed")
-	$settings/fold_select.connect("dir_selected", self, "popup_folder_selected")
+	fold_popup.connect("dir_selected", self, "popup_folder_selected")
 	
 	#- select/deselect all
-	$tex/grid_sets/desel_all.connect("pressed",self, "select_all_tex", [false])
-	$tex/grid_sets/sel_all.connect("pressed",self, "select_all_tex", [true])
+	btn_deselect_all.connect("pressed",self, "select_all_tex", [false])
+	btn_select_all.connect("pressed",self, "select_all_tex", [true])
 	#- fold/unfold buttons
 	$btn_sett.connect("pressed",self,"settings_visibility_toggled")
 	$btn_tex.connect("pressed",self,"textures_visibility_toggled")
@@ -154,11 +161,13 @@ func file_path_is_valid(path):
 	return dir.file_exists(path)
 
 
-func set_next_texture(val = 1):
-	match mode:
+func set_next_texture(val = -1):
+	if val == -1:
+		val = mode
+	match val:
 		NextMode.RAND : select_random_texture()
 		NextMode.NEXT : select_next_texture()
-		NextMode.SINGLE : return
+		NextMode.SINGLE : check_same_tex_id()
 
 
 func select_next_texture():
@@ -173,16 +182,26 @@ func select_next_texture():
 		if tex_id >= tex_collection.size():
 			tex_id = 0
 	load_tex()
-	set_selected_tex_offset(tex_id)
+	set_selected_tex_offset()
 
 
 func select_random_texture():
 	tex_id = tex_collection_selected_ids[randi()%tex_collection_selected_ids.size()]
 	load_tex()
-	set_selected_tex_offset(tex_id)
+	set_selected_tex_offset()
 
 
-func set_selected_tex_offset(id):
+func check_same_tex_id():
+	if tex_collection_selected_ids.empty():
+		return
+	if tex_id in tex_collection_selected_ids:
+		return
+	else:
+		tex_id = tex_collection_selected_ids[0]
+		set_selected_tex_offset()
+
+
+func set_selected_tex_offset(id = tex_id):
 	if id == tex_id and tex_grid.get_child_count() > 0:
 		selected_tex_offset_scaled = tex_grid.get_child(tex_id).offset_px * custom_scale
 		update_infos()
@@ -193,22 +212,22 @@ func select_all_tex(val):
 		for btn in tex_grid.get_children():
 			btn.selected = val
 		tex_collection_selected_ids = range(tex_collection.size()) if val else [0]
-#		update_selection_for_tex_btns()
+		set_next_texture()
+		update_selection_for_tex_btns()
 
 
 #============================== UPDATE GUI =====================================
 func update_settings():
-	paint_rad_slider.value = paint_radius
+	paint_tgg.pressed = is_painting
 	paint_rad_le.text = str(paint_radius)
-	paint_rad_slider.release_focus()
 	paint_rad_le.release_focus()
-	scatter_paint_color.color = paint_color
+	paint_color_selector.color = erase_color
 	ck_offset.pressed = offset_active
 	folder_btn.text = tex_collection_path
 	mode_opt.selected = mode
 	
 	scale_val.text = str(custom_scale)
-	spacing_val.text = str(spacing)
+	spacing_ln.text = str(spacing)
 
 
 func update_sprite_grid():
@@ -230,25 +249,28 @@ func update_sprite_grid():
 
 
 func update_infos():
-	$infos.text = \
+	info_panel.text = \
 """current id: %s
 selected ids: %s
 mouse pos: %s
 offset scaled: %s"""\
 %[tex_id, tex_collection_selected_ids, mouse_loc_pos, selected_tex_offset_scaled]
+	$tex/infos/curr_id.text = str(tex_id)
+	$tex/infos/off_x.text = str(selected_tex_offset_scaled.x)
+	$tex/infos/off_y.text = str(selected_tex_offset_scaled.y)
 
 
 func update_selection_for_tex_btns():
-	for btn in $textures/grid.get_children():
+	for btn in tex_grid.get_children():
 		btn.selected = btn.id in tex_collection_selected_ids
 
 
 #=========================== CONNECTED FUNCS ===================================
-func scatter_paint_toggled(val):
+func paint_toggled(val):
 	is_painting = val
-	scatter_paint_tgg.release_focus()
+	paint_tgg.release_focus()
 func paint_circle_color_changed(col):
-	paint_color = col
+	erase_color = col
 func paint_radius_changed(val):
 	paint_radius = int(val)
 	update_settings()
@@ -302,10 +324,10 @@ func change_grid_height(val):
 	
 	
 func show_hide_infos():
-	$infos.visible = !$infos.visible
+	info_panel.visible = !info_panel.visible
 
 func select_folder_pressed():
-	$settings/fold_select.popup()
+	fold_popup.popup()
 func popup_folder_selected(path):
 	tex_collection_path = path
 	folder_btn.text = path
@@ -314,13 +336,6 @@ func popup_folder_selected(path):
 	set_next_texture()
 #	yield(get_tree(), "idle_frame")
 
-func subnode_ck_toggled(val):
-	subnode_name = subnode_ln.text if val else ""
-
-func subnode_ln_edited(text):
-	subnode_name = text
-	if subnode_name == "":
-		subnode_ck.pressed = false
 
 #---- fold / unfold
 func textures_visibility_toggled():
@@ -328,4 +343,17 @@ func textures_visibility_toggled():
 func settings_visibility_toggled():
 	$settings.visible = !$settings.visible
 
+func base_scale_changed(val):
+	self.custom_scale = float(val)
+	
 
+func subnode_ck_toggled(val):
+	subnode_name = subnode_ln.text if val else ""
+func subnode_ln_edited(text):
+	subnode_name = text
+	subnode_ck.pressed = subnode_name != ""
+func custom_name_toggled(val):
+	custom_name = name_ln.text if val else ""
+func custom_name_changed(text):
+	custom_name = text
+	name_tgg.pressed = custom_name != ""

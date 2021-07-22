@@ -37,7 +37,7 @@ func move_cross():
 	var i1 : Vector2
 	
 
-	if i.x < i.y:
+	if i.x <= i.y:
 		i1.y = b.y
 		i1.x = i.x * (i1.y / i.y)
 	else:
@@ -62,7 +62,7 @@ func move_cross():
 
 
 func voffset_changed(val):
-	offset_unit.y = val
+	offset_unit.y = -val
 	update_offset_px()
 	move_cross()
 func hoffset_changed(val):

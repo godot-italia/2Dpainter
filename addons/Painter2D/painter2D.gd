@@ -8,6 +8,8 @@ var view_transform : Transform2D
 var mouse_loc_pos : Vector2
 var mouse_glb_pos : Vector2
 
+var tex_rect_collection := []
+
 
 var label = Label.new()
 var font = label.get_font("")
@@ -33,6 +35,8 @@ func handles(object):
 		
 		add_control_to_dock(EditorPlugin.DOCK_SLOT_LEFT_BL, dock)
 	else:
+		dock.is_painting = false
+		dock.update_settings()
 		remove_control_from_docks(dock)
 	return painter_selected
 
@@ -66,7 +70,7 @@ func forward_canvas_gui_input(event):
 			mouse_left_pressed = event.is_pressed()
 			if event.is_pressed():
 				prev_stored_pos = overlay_pos2scene_pos(event.position)
-				place_new_sprite(overlay_pos2scene_pos(event.position))
+				place_new_sprite(prev_stored_pos)
 				
 			elif dragging:
 				dragging = false
@@ -131,7 +135,7 @@ func forward_canvas_draw_over_viewport(overlay):
 
 func draw_paint_circle(overlay, pos):
 	var scaled_radius = dock.paint_radius * view_transform.get_scale().x
-	overlay.draw_circle(pos, scaled_radius, dock.paint_color)
+	overlay.draw_circle(pos, scaled_radius, dock.erase_color)
 
 
 func draw_next_texture(overlay, mouse_loc_pos):
@@ -141,7 +145,9 @@ func draw_next_texture(overlay, mouse_loc_pos):
 		return
 	var tex_size = dock.next_texture.get_size()
 	var scaled_tex = tex_size * view_transform.get_scale() * dock.custom_scale
-	var tex_pos = mouse_loc_pos - scaled_tex/2 - dock.selected_tex_offset_scaled
+	var tex_pos = mouse_loc_pos - scaled_tex/2
+	if dock.offset_active:
+		tex_pos -= dock.selected_tex_offset_scaled * view_transform.get_scale()# * dock.custom_scale)/(dock.custom_scale)
 	var text_rect = Rect2(tex_pos.x, tex_pos.y, scaled_tex.x, scaled_tex.y)
 #	overlay.draw_set_transform(mouse_glb_pos, PI/2, Vector2.ONE)
 	overlay.draw_texture_rect(dock.next_texture, text_rect, false, Color(1,1,1,0.3))
@@ -160,9 +166,16 @@ func sprite_custom_scale_add(val):
 func place_new_sprite(global_pos):
 	var new_sprite = Sprite.new()
 	new_sprite.texture = dock.next_texture
-	new_sprite.global_position = global_pos - dock.selected_tex_offset_scaled
+	new_sprite.global_position = global_pos
+	if dock.offset_active:
+		new_sprite.offset = -dock.selected_tex_offset_scaled/dock.custom_scale
 	new_sprite.scale *= dock.custom_scale
 	
+	#--- custom sprite name
+	if dock.custom_name != "":
+		new_sprite.name = dock.custom_name
+	
+	#--- add to subnode
 	var sub_node = parent_node
 	if dock.subnode_name != "":
 		sub_node = parent_node.find_node(dock.subnode_name)
@@ -175,9 +188,29 @@ func place_new_sprite(global_pos):
 		parent_node.add_child(sub_node)
 		sub_node.owner = painter_node.owner
 		sub_node.add_child(new_sprite)
-		
+	
 	new_sprite.owner = painter_node.owner
 	dock.set_next_texture()
+	update_tex_rect_collection()
+
+
+func erase_sprites(global_pos):
+	Node2D.new().get_world_2d().space
+	pass
+
 
 func overlay_pos2scene_pos(pos):
 	return (pos - view_transform.get_origin()) / view_transform.get_scale().x
+
+func update_tex_rect_collection():
+	tex_rect_collection = []
+	var sub_node = parent_node
+	if dock.subnode_name != "":
+		sub_node = parent_node.find_node(dock.subnode_name)
+	
+	for i in range(sub_node.get_child_count()):
+		var tex = sub_node.get_child(i)
+		if tex is Sprite:
+			tex_rect_collection.append( tex.get_rect() )
+
+
