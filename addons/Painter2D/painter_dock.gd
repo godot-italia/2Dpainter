@@ -9,16 +9,22 @@ var mouse_loc_pos
 var view_transform
 
 var mode = NextMode.NEXT
+enum NextMode {RAND, NEXT, SINGLE}
 var is_painting := false
 var erase_color : Color = Color.red - Color(0,0,0,0.7)
+
 var spacing = 50 setget set_spacing
 var paint_radius : int = 40 setget set_paint_radius
-var subnode_name = ""
 
+var subnode_name = "decorations"
 var custom_name = ""
 
 var custom_scale : float = 0.5 setget set_custom_scale
-enum NextMode {RAND, NEXT, SINGLE}
+var rand_scale_mult = 0
+var rand_scale : float
+var custom_rot : float = 0.0 setget set_custom_rot
+var rand_rot_mult = 0
+var rand_rot : float
 
 #--- offset
 var offset_active = false
@@ -38,20 +44,23 @@ onready var paint_tgg = $tools/paint/activate
 onready var paint_color_selector = $tools/paint/color
 onready var mode_opt = $tools/paint/opt_mode
 onready var spacing_ln = $tools/brush/spac_val
-onready var paint_rad_le = $tools/brush/del_rad
-onready var subnode_ck = $tools/subnode/btn
+onready var paint_radius_ln = $tools/brush/del_rad
+onready var subnode_tgg = $tools/subnode/btn
 onready var subnode_ln = $tools/subnode/val
 onready var name_tgg = $tools/name/btn 
 onready var name_ln = $tools/name/val
 
 #--- settings
-onready var ck_offset = $tex/grid_sets/ck_offset
 
 #- scale
-onready var scale_val = $settings/scale/val
+onready var scale_ln = $settings/scale/val
 onready var scale_rand_slider = $settings/scale/rand_sl
-onready var scale_rand_val = $settings/scale/rand_val
+onready var scale_rand_ln = $settings/scale/rand_val
 #- rotation
+onready var rot_ln = $settings/rotation/val
+onready var rot_rand_slider = $settings/rotation/rand_sl
+onready var rot_rand_ln = $settings/rotation/rand_val
+
 
 #- folder
 onready var folder_btn = $settings/folder/btn
@@ -60,11 +69,13 @@ onready var fold_popup = $settings/fold_select
 #--- tex grid
 onready var tex_selection_button = preload("res://addons/Painter2D/tex_selection_button.tscn")
 onready var tex_grid = $tex/grid_cont/grid
+onready var offset_tgg = $tex/grid_sets/offset_tgg
+onready var btn_select_all = $tex/grid_sets/sel_all
+onready var btn_deselect_all = $tex/grid_sets/desel_all
+
 onready var tex_spin_cols = $tex/grid_col/spin_grid
 onready var tex_spin_height = $tex/grid_col/spin_grid_height
 
-onready var btn_select_all = $tex/grid_sets/sel_all
-onready var btn_deselect_all = $tex/grid_sets/desel_all
 
 #--- bottom
 onready var info_panel = $infos
@@ -85,36 +96,45 @@ func _ready():
 
 
 func connect_everything():
-	#paint
+	#--- paint tools
+	mode_opt.connect("item_selected", self, "mode_selected")
 	paint_tgg.connect("toggled",self,"paint_toggled")
 	paint_color_selector.connect("color_changed", self, "paint_circle_color_changed")
-	paint_rad_le.connect("text_entered", self, "paint_radius_changed")
-	mode_opt.connect("item_selected", self, "mode_selected")
-	scale_val.connect("text_changed",self, "base_scale_changed")
+	paint_radius_ln.connect("text_entered", self, "paint_radius_changed")
+	spacing_ln.connect("text_changed", self, "set_spacing")
 	
-	subnode_ck.connect("toggled", self, "subnode_ck_toggled")
+	subnode_tgg.connect("toggled", self, "subnode_ck_toggled")
 	subnode_ln.connect("text_changed", self, "subnode_ln_edited")
-	
 	name_tgg.connect("toggled",self,"custom_name_toggled")
 	name_ln.connect("text_changed",self,"custom_name_changed")
 	
-	#settings
-	disable_plugin_btn.connect("pressed", self, "disable_plugin")
-	show_info_btn.connect("pressed", self, "show_hide_infos")
+	#--- settings
+	scale_ln.connect("text_changed",self, "set_custom_scale")
+	scale_rand_slider.connect("value_changed", self, "set_rand_scale")
+	scale_rand_ln.connect("text_changed", self, "set_rand_scale")
 	
-	ck_offset.connect("toggled", self, "offset_active_toggled")
-	tex_spin_cols.connect("value_changed", self, "change_grid_cols")
-	tex_spin_height.connect("value_changed", self, "change_grid_height")
+	rot_ln.connect("text_changed", self, "set_custom_rot")
+	rot_rand_slider.connect("value_changed", self, "set_rand_rot")
+	rot_rand_ln.connect("text_changed", self, "set_rand_rot")
 	
 	folder_btn.connect("pressed", self, "select_folder_pressed")
 	fold_popup.connect("dir_selected", self, "popup_folder_selected")
 	
-	#- select/deselect all
+	#--- grid
+	tex_spin_cols.connect("value_changed", self, "change_grid_cols")
+	tex_spin_height.connect("value_changed", self, "change_grid_height")
+	
+	offset_tgg.connect("toggled", self, "offset_active_toggled")
 	btn_deselect_all.connect("pressed",self, "select_all_tex", [false])
 	btn_select_all.connect("pressed",self, "select_all_tex", [true])
-	#- fold/unfold buttons
+	
+	#--- fold/unfold buttons
 	$btn_sett.connect("pressed",self,"settings_visibility_toggled")
 	$btn_tex.connect("pressed",self,"textures_visibility_toggled")
+	
+	#--- bottom
+	disable_plugin_btn.connect("pressed", self, "disable_plugin")
+	show_info_btn.connect("pressed", self, "show_hide_infos")
 
 
 func find_all_textures():
@@ -132,17 +152,23 @@ func find_all_textures():
 				tex_collection.append(file)
 	dir.list_dir_end()
 	
-	tex_collection_selected_ids = range(tex_collection.size())
+	if tex_collection.empty():
+		print("DOCK: no textures found")
+		tex_collection_selected_ids = []
+	else:
+		tex_collection_selected_ids = range(tex_collection.size())
 
 
 
 #=============================== UTILITIES =====================================
 func load_tex():
-	if tex_id == -1:
-		tex_id = tex_collection_selected_ids[0]
-	
 	if tex_collection_selected_ids.empty():
-		tex_collection_selected_ids.append(0)
+		print("DOCK| Id selection is empty")
+		next_texture = null
+		return
+	
+	if not tex_id in tex_collection_selected_ids:
+		tex_id = tex_collection_selected_ids[0]
 	
 	var file_path = tex_collection[tex_id]
 	tex_full_path = tex_collection_path + "/" + file_path
@@ -162,6 +188,8 @@ func file_path_is_valid(path):
 
 
 func set_next_texture(val = -1):
+	randomize_rand_values()
+	
 	if val == -1:
 		val = mode
 	match val:
@@ -219,15 +247,27 @@ func select_all_tex(val):
 #============================== UPDATE GUI =====================================
 func update_settings():
 	paint_tgg.pressed = is_painting
-	paint_rad_le.text = str(paint_radius)
-	paint_rad_le.release_focus()
+	paint_radius_ln.text = str(paint_radius)
 	paint_color_selector.color = erase_color
-	ck_offset.pressed = offset_active
-	folder_btn.text = tex_collection_path
 	mode_opt.selected = mode
-	
-	scale_val.text = str(custom_scale)
 	spacing_ln.text = str(spacing)
+	
+	subnode_ln.text = subnode_name
+	subnode_tgg.pressed = subnode_name != ""
+	name_ln.text = custom_name
+	name_tgg.pressed = custom_name != ""
+	
+	scale_ln.text = str(custom_scale)
+	scale_rand_slider.value = rand_scale_mult
+	scale_rand_ln.text = str(rand_scale_mult)
+	
+	rot_ln.text = str(rad2deg(custom_rot))
+	rot_rand_slider.value = rand_rot_mult
+	rot_rand_ln.text = str(rand_rot_mult)
+	
+	folder_btn.text = tex_collection_path
+	
+	offset_tgg.pressed = offset_active
 
 
 func update_sprite_grid():
@@ -269,30 +309,64 @@ func update_selection_for_tex_btns():
 func paint_toggled(val):
 	is_painting = val
 	paint_tgg.release_focus()
+func mode_selected(val):
+	mode = val
 func paint_circle_color_changed(col):
 	erase_color = col
+
+func set_spacing(val):
+	spacing = int(val)
+	update_settings()
 func paint_radius_changed(val):
 	paint_radius = int(val)
 	update_settings()
 func set_paint_radius(val):
 	paint_radius = clamp(val, 5, 150)
 	update_settings()
+
 func set_custom_scale(val):
+	val = float(val)
 	custom_scale = clamp(val, 0.01, 50)
 	update_settings()
-
-func disable_plugin():
-	var dummy = EditorPlugin.new()
-	dummy.get_editor_interface().set_plugin_enabled("Painter2D", false)
-	dummy.queue_free()
-
-func set_spacing(val):
-	spacing = val
+func set_rand_scale(val):
+	rand_scale_mult = clamp(float(val), 0.0, 1.0)
 	update_settings()
+func set_custom_rot(val):
+	custom_rot = deg2rad(float(val))
+	update_settings()
+func increase_custom_rot(val):
+	self.custom_rot += deg2rad(val)
+func set_rand_rot(val):
+	rand_rot_mult = float(val)
+	update_settings()
+func randomize_rand_values():
+	randomize()
+	rand_scale = rand_range(0, rand_scale_mult)*custom_scale
+	rand_rot = rand_range(-rand_rot_mult, rand_rot_mult)*PI
 
-func mode_selected(val):
-	mode = val
 
+func subnode_ck_toggled(val):
+	subnode_name = subnode_ln.text if val else ""
+func subnode_ln_edited(text):
+	subnode_name = text
+	subnode_tgg.pressed = subnode_name != ""
+func custom_name_toggled(val):
+	custom_name = name_ln.text if val else ""
+func custom_name_changed(text):
+	custom_name = text
+	name_tgg.pressed = custom_name != ""
+
+#- settings
+func select_folder_pressed():
+	fold_popup.popup()
+func popup_folder_selected(path):
+	tex_collection_path = path
+	folder_btn.text = path
+	find_all_textures()
+	update_sprite_grid()
+	set_next_texture()
+
+#- grid
 func btn_selection_changed(id, val):
 	if not val:
 		if id in tex_collection_selected_ids:
@@ -301,9 +375,6 @@ func btn_selection_changed(id, val):
 		if not id in tex_collection_selected_ids:
 			tex_collection_selected_ids.append(id)
 	tex_collection_selected_ids.sort()
-#	print("Selection ids: %s"%[tex_collection_selected_ids])
-
-
 func offset_active_toggled(val):
 	offset_active = val
 	for btn in tex_grid.get_children():
@@ -321,20 +392,15 @@ func change_grid_height(val):
 		5: height = 140
 	for btn in tex_grid.get_children():
 		btn.get_node("btn").rect_min_size.y = height
-	
-	
+
+#- bottom
+func disable_plugin():
+	var dummy = EditorPlugin.new()
+	dummy.get_editor_interface().set_plugin_enabled("Painter2D", false)
+	dummy.queue_free()
 func show_hide_infos():
 	info_panel.visible = !info_panel.visible
 
-func select_folder_pressed():
-	fold_popup.popup()
-func popup_folder_selected(path):
-	tex_collection_path = path
-	folder_btn.text = path
-	find_all_textures()
-	update_sprite_grid()
-	set_next_texture()
-#	yield(get_tree(), "idle_frame")
 
 
 #---- fold / unfold
@@ -343,17 +409,9 @@ func textures_visibility_toggled():
 func settings_visibility_toggled():
 	$settings.visible = !$settings.visible
 
-func base_scale_changed(val):
-	self.custom_scale = float(val)
-	
 
-func subnode_ck_toggled(val):
-	subnode_name = subnode_ln.text if val else ""
-func subnode_ln_edited(text):
-	subnode_name = text
-	subnode_ck.pressed = subnode_name != ""
-func custom_name_toggled(val):
-	custom_name = name_ln.text if val else ""
-func custom_name_changed(text):
-	custom_name = text
-	name_tgg.pressed = custom_name != ""
+
+
+
+
+

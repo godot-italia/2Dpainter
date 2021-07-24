@@ -9,4 +9,4 @@
 [node name="Painter2D" type="Node2D" parent="decorations"]
 script = ExtResource( 2 )
 
-[node name="ciccio" type="Node2D" parent="decorations"]
+[node name="decorations" type="Node2D" parent="decorations"]

@@ -47,6 +47,7 @@ var mouse_left_pressed := false
 var mouse_right_pressed := false
 var mouse_middle_pressed := false
 var ctrl_pressed := false
+var shift_pressed := false
 var dragging := false
 var spacing = 50
 var prev_stored_pos : Vector2
@@ -63,6 +64,8 @@ func forward_canvas_gui_input(event):
 	if event is InputEventKey:
 		if event.scancode == KEY_CONTROL:
 			ctrl_pressed = event.is_pressed()
+		if event.scancode == KEY_SHIFT:
+			shift_pressed = event.is_pressed()
 	
 	if event is InputEventMouseButton:
 		mouse_event_pos = event.position
@@ -83,16 +86,20 @@ func forward_canvas_gui_input(event):
 		
 		elif event.button_index == BUTTON_WHEEL_UP and event.is_pressed():
 			if mouse_right_pressed:
-				paint_radius_add(5)
+				dock.paint_radius += 5
 			elif ctrl_pressed:
-				sprite_custom_scale_add(0.2)
+				dock.custom_scale *= 1.1
+			elif shift_pressed:
+				dock.increase_custom_rot(PI/90)
 			else:
 				dock.set_next_texture()
 		elif event.button_index == BUTTON_WHEEL_DOWN and event.is_pressed():
 			if mouse_right_pressed:
-				paint_radius_add(-5)
+				dock.paint_radius -= 5
 			elif ctrl_pressed:
-				sprite_custom_scale_add(-0.2)
+				dock.custom_scale /= 1.1
+			elif shift_pressed:
+				dock.increase_custom_rot(-PI/90)
 			else:
 				dock.set_next_texture(-1)
 	if event is InputEventMouseMotion:
@@ -131,7 +138,7 @@ func forward_canvas_draw_over_viewport(overlay):
 		draw_paint_circle(overlay, mouse_loc_pos)
 	else:
 		draw_next_texture(overlay, mouse_loc_pos)
-
+	overlay.draw_texture()
 
 func draw_paint_circle(overlay, pos):
 	var scaled_radius = dock.paint_radius * view_transform.get_scale().x
@@ -144,10 +151,10 @@ func draw_next_texture(overlay, mouse_loc_pos):
 		dock.set_next_texture()
 		return
 	var tex_size = dock.next_texture.get_size()
-	var scaled_tex = tex_size * view_transform.get_scale() * dock.custom_scale
+	var scaled_tex = tex_size * view_transform.get_scale() * (dock.custom_scale - dock.rand_scale)
 	var tex_pos = mouse_loc_pos - scaled_tex/2
 	if dock.offset_active:
-		tex_pos -= dock.selected_tex_offset_scaled * view_transform.get_scale()# * dock.custom_scale)/(dock.custom_scale)
+		tex_pos -= dock.selected_tex_offset_scaled * view_transform.get_scale()
 	var text_rect = Rect2(tex_pos.x, tex_pos.y, scaled_tex.x, scaled_tex.y)
 #	overlay.draw_set_transform(mouse_glb_pos, PI/2, Vector2.ONE)
 	overlay.draw_texture_rect(dock.next_texture, text_rect, false, Color(1,1,1,0.3))
@@ -157,19 +164,13 @@ func draw_next_texture(overlay, mouse_loc_pos):
 
 
 #=============================== PAINT TOOLS ===================================
-func paint_radius_add(val):
-	dock.paint_radius += val
-func sprite_custom_scale_add(val):
-	dock.custom_scale += val
-
-
 func place_new_sprite(global_pos):
 	var new_sprite = Sprite.new()
 	new_sprite.texture = dock.next_texture
 	new_sprite.global_position = global_pos
 	if dock.offset_active:
-		new_sprite.offset = -dock.selected_tex_offset_scaled/dock.custom_scale
-	new_sprite.scale *= dock.custom_scale
+		new_sprite.offset = -dock.selected_tex_offset_scaled/(dock.custom_scale - dock.rand_scale)
+	new_sprite.scale *= (dock.custom_scale - dock.rand_scale)
 	
 	#--- custom sprite name
 	if dock.custom_name != "":
