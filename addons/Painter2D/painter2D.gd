@@ -142,6 +142,15 @@ func forward_canvas_draw_over_viewport(overlay):
 		draw_paint_circle(overlay, mouse_loc_pos)
 	else:
 		draw_next_texture(overlay, mouse_loc_pos)
+	
+	#-- test draw sprites' rect
+	if not tex_rect_collection.empty() :#and mouse_right_pressed:
+		for rect in tex_rect_collection:
+			var drawn_rect : Rect2 = rect
+			drawn_rect.size *= view_transform.get_scale()
+			drawn_rect.position *= view_transform.get_scale()
+			drawn_rect.position += view_transform.origin
+			overlay.draw_rect(drawn_rect, Color(0,1,1,0.3))
 
 
 func draw_paint_circle(overlay, pos):
@@ -156,14 +165,15 @@ func draw_next_texture(overlay, mouse_loc_pos):
 		return
 	var tex_size = dock.next_texture.get_size()
 	var scaled_tex = tex_size * view_transform.get_scale() * (dock.custom_scale - dock.rand_scale)
-	var tex_pos = mouse_loc_pos - scaled_tex/2
+	var tex_pos = -scaled_tex/2
 	if dock.offset_active:
 		tex_pos -= dock.selected_tex_offset_scaled * view_transform.get_scale()
 	var text_rect = Rect2(tex_pos.x, tex_pos.y, scaled_tex.x, scaled_tex.y)
-#	overlay.draw_set_transform(mouse_glb_pos, PI/2, Vector2.ONE)
+	var tex_rot = dock.custom_rot
+	overlay.draw_set_transform(mouse_loc_pos, tex_rot, Vector2.ONE)
 	overlay.draw_texture_rect(dock.next_texture, text_rect, false, Color(1,1,1,0.3))
-#	overlay.draw_set_transform(Vector2.ZERO, 0, Vector2.ONE)
-#	overlay.draw_set_transform("pos", "rot", "scale")
+	overlay.draw_set_transform(Vector2.ZERO, 0, Vector2.ONE)
+	
 	
 
 
@@ -175,21 +185,13 @@ func place_new_sprite(global_pos):
 	if dock.offset_active:
 		new_sprite.offset = -dock.selected_tex_offset_scaled/(dock.custom_scale - dock.rand_scale)
 	new_sprite.scale *= (dock.custom_scale - dock.rand_scale)
-	new_sprite.rotation = dock.custom_rot - dock.rand_rot
+	new_sprite.rotation = (dock.custom_rot - dock.rand_rot)
 	#--- custom sprite name
 	if dock.custom_name != "":
 		new_sprite.name = dock.custom_name
 	
 	#--- add to subnode
-	sub_node = parent_node
-	if dock.subnode_name != "":
-		sub_node = parent_node.find_node(dock.subnode_name)
-		if not sub_node:
-			sub_node = Node2D.new()
-			sub_node.name = dock.subnode_name
-			parent_node.add_child(sub_node)
-			sub_node.owner = painter_node.owner
-	
+	get_subnode()
 	sub_node.add_child(new_sprite)
 	new_sprite.owner = painter_node.owner
 	
@@ -201,24 +203,37 @@ func erase_sprites(mouse_pos):
 		return
 	for i in range(tex_rect_collection.size()):
 		var rect: Rect2 = tex_rect_collection[i]
-		print(rect, mouse_pos, rect.has_point(mouse_pos))
+#		print(rect, mouse_pos, rect.has_point(mouse_pos))
 		if rect.has_point(mouse_pos):
 			sub_node.get_child(i).free()
 			tex_rect_collection.remove(i)
+			break
+
+
+func update_tex_rect_collection():
+	tex_rect_collection = []
+	get_subnode()
+	for i in range(sub_node.get_child_count()):
+		var tex = sub_node.get_child(i)
+		if tex is Sprite:
+#			print(tex.name, " ", tex.get_rect(), " ", tex.get_transform())
+			var tex_size = tex.get_rect().size * tex.get_transform().get_scale()
+			var tex_offset = tex.offset * tex.get_transform().get_scale()
+			var tex_orig = tex.get_transform().get_origin() - tex_size/2 + tex_offset
+			var transl_rect = Rect2(tex_orig, tex_size)
+			tex_rect_collection.append(transl_rect)
 
 
 func overlay_pos2scene_pos(pos):
 	return (pos - view_transform.get_origin()) / view_transform.get_scale().x
 
-func update_tex_rect_collection():
-	tex_rect_collection = []
-	for i in range(sub_node.get_child_count()):
-		var tex = sub_node.get_child(i)
-		if tex is Sprite:
-			print(tex.name, " ", tex.get_rect(), " ", tex.get_transform())
-			var tex_size = tex.get_rect().size * tex.get_transform().get_scale()
-			var tex_orig = tex.get_transform().get_origin() - tex_size/2
-			var transl_rect = Rect2(tex_orig, tex_size)
-			tex_rect_collection.append(transl_rect)
 
-
+func get_subnode():
+	sub_node = parent_node
+	if dock.subnode_name != "":
+		sub_node = parent_node.find_node(dock.subnode_name)
+		if not sub_node:
+			sub_node = Node2D.new()
+			sub_node.name = dock.subnode_name
+			parent_node.add_child(sub_node)
+			sub_node.owner = painter_node.owner

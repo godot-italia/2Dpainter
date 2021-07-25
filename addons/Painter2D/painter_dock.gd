@@ -7,6 +7,7 @@ extends VBoxContainer
 
 var mouse_loc_pos
 var view_transform
+var painter_node = null
 
 var mode = NextMode.NEXT
 enum NextMode {RAND, NEXT, SINGLE}
@@ -90,6 +91,8 @@ func _ready():
 	connect_everything()
 	find_all_textures()
 	select_next_texture()
+	
+#	update_vars_from_painter_node()
 	update_settings()
 	update_sprite_grid()
 	update_infos()
@@ -113,7 +116,7 @@ func connect_everything():
 	scale_rand_slider.connect("value_changed", self, "set_rand_scale")
 	scale_rand_ln.connect("text_entered", self, "set_rand_scale")
 	
-	rot_ln.connect("text_entered", self, "set_custom_rot")
+	rot_ln.connect("text_entered", self, "set_custom_rot_degrees")
 	rot_rand_slider.connect("value_changed", self, "set_rand_rot")
 	rot_rand_ln.connect("text_entered", self, "set_rand_rot")
 	
@@ -231,7 +234,7 @@ func check_same_tex_id():
 
 func set_selected_tex_offset(id = tex_id):
 	if id == tex_id and tex_grid.get_child_count() > 0:
-		selected_tex_offset_scaled = tex_grid.get_child(tex_id).offset_px * custom_scale
+		selected_tex_offset_scaled = tex_grid.get_child(tex_id).offset_px * (custom_scale - rand_scale)
 		update_infos()
 
 
@@ -332,10 +335,13 @@ func set_rand_scale(val):
 	rand_scale_mult = clamp(float(val), 0.0, 1.0)
 	update_settings()
 func set_custom_rot(val):
-	custom_rot = deg2rad(float(val))
+	custom_rot = val
 	update_settings()
+func set_custom_rot_degrees(val):
+	custom_rot = deg2rad(float(val))
+	
 func increase_custom_rot(val):
-	self.custom_rot += deg2rad(val)
+	self.custom_rot += (val)
 func set_rand_rot(val):
 	rand_rot_mult = float(val)
 	update_settings()
