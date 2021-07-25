@@ -114,6 +114,7 @@ margin_bottom = 76.0
 [node name="btn" type="CheckBox" parent="tools/subnode"]
 margin_right = 104.0
 margin_bottom = 24.0
+pressed = true
 text = "add to node"
 
 [node name="val" type="LineEdit" parent="tools/subnode"]
@@ -121,6 +122,7 @@ margin_left = 108.0
 margin_right = 323.0
 margin_bottom = 24.0
 size_flags_horizontal = 3
+text = "decorations"
 placeholder_text = "insert node name"
 
 [node name="name" type="HBoxContainer" parent="tools"]

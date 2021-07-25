@@ -109,13 +109,13 @@ func connect_everything():
 	name_ln.connect("text_changed",self,"custom_name_changed")
 	
 	#--- settings
-	scale_ln.connect("text_changed",self, "set_custom_scale")
+	scale_ln.connect("text_entered",self, "set_custom_scale")
 	scale_rand_slider.connect("value_changed", self, "set_rand_scale")
-	scale_rand_ln.connect("text_changed", self, "set_rand_scale")
+	scale_rand_ln.connect("text_entered", self, "set_rand_scale")
 	
-	rot_ln.connect("text_changed", self, "set_custom_rot")
+	rot_ln.connect("text_entered", self, "set_custom_rot")
 	rot_rand_slider.connect("value_changed", self, "set_rand_rot")
-	rot_rand_ln.connect("text_changed", self, "set_rand_rot")
+	rot_rand_ln.connect("text_entered", self, "set_rand_rot")
 	
 	folder_btn.connect("pressed", self, "select_folder_pressed")
 	fold_popup.connect("dir_selected", self, "popup_folder_selected")
