@@ -1,6 +1,5 @@
-[gd_scene load_steps=3 format=2]
+[gd_scene load_steps=2 format=2]
 
-[ext_resource path="res://icon.png" type="Texture" id=1]
 [ext_resource path="res://addons/Painter2D/painter_node.gd" type="Script" id=2]
 
 [node name="demo_scene" type="Node2D"]
@@ -9,79 +8,3 @@
 
 [node name="Painter2D" type="Node2D" parent="decorations"]
 script = ExtResource( 2 )
-
-[node name="decorations" type="Node2D" parent="decorations"]
-
-[node name="Sprite" type="Sprite" parent="decorations/decorations"]
-position = Vector2( 89.0596, 208.502 )
-rotation = -0.907594
-scale = Vector2( 0.342767, 0.342767 )
-texture = ExtResource( 1 )
-offset = Vector2( 0, -46.679 )
-
-[node name="Sprite2" type="Sprite" parent="decorations/decorations"]
-position = Vector2( 267.928, 177.801 )
-rotation = 1.02172
-scale = Vector2( 0.35787, 0.35787 )
-texture = ExtResource( 1 )
-offset = Vector2( 0, -44.709 )
-
-[node name="Sprite3" type="Sprite" parent="decorations/decorations"]
-position = Vector2( 321.322, 176.466 )
-scale = Vector2( 0.333355, 0.333355 )
-texture = ExtResource( 1 )
-offset = Vector2( 0, -47.9968 )
-
-[node name="Sprite4" type="Sprite" parent="decorations/decorations"]
-position = Vector2( 374.715, 184.475 )
-scale = Vector2( 0.417353, 0.417353 )
-texture = ExtResource( 1 )
-offset = Vector2( 0, -38.3369 )
-
-[node name="Sprite5" type="Sprite" parent="decorations/decorations"]
-position = Vector2( 422.77, 199.159 )
-scale = Vector2( 0.347504, 0.347504 )
-texture = ExtResource( 1 )
-offset = Vector2( 0, -46.0426 )
-
-[node name="Sprite6" type="Sprite" parent="decorations/decorations"]
-position = Vector2( 472.159, 219.181 )
-scale = Vector2( 0.371705, 0.371705 )
-texture = ExtResource( 1 )
-offset = Vector2( 0, -43.0449 )
-
-[node name="Sprite7" type="Sprite" parent="decorations/decorations"]
-position = Vector2( 518.878, 239.204 )
-scale = Vector2( 0.418596, 0.418596 )
-texture = ExtResource( 1 )
-offset = Vector2( 0, -38.223 )
-
-[node name="Sprite8" type="Sprite" parent="decorations/decorations"]
-position = Vector2( 570.937, 252.552 )
-scale = Vector2( 0.488871, 0.488871 )
-texture = ExtResource( 1 )
-offset = Vector2( 0, -32.7284 )
-
-[node name="Sprite9" type="Sprite" parent="decorations/decorations"]
-position = Vector2( 622.996, 257.892 )
-scale = Vector2( 0.449749, 0.449749 )
-texture = ExtResource( 1 )
-offset = Vector2( 0, -35.5754 )
-
-[node name="Sprite10" type="Sprite" parent="decorations/decorations"]
-position = Vector2( 673.719, 260.561 )
-scale = Vector2( 0.439948, 0.439948 )
-texture = ExtResource( 1 )
-offset = Vector2( 0, -36.368 )
-
-[node name="Sprite11" type="Sprite" parent="decorations/decorations"]
-position = Vector2( 725.778, 261.896 )
-scale = Vector2( 0.40574, 0.40574 )
-texture = ExtResource( 1 )
-offset = Vector2( 0, -39.4342 )
-
-[node name="Sprite12" type="Sprite" parent="decorations/decorations"]
-position = Vector2( 777.837, 252.552 )
-scale = Vector2( 0.392408, 0.392408 )
-texture = ExtResource( 1 )
-offset = Vector2( 0, -40.7739 )

@@ -50,7 +50,6 @@ var mouse_middle_pressed := false
 var ctrl_pressed := false
 var shift_pressed := false
 var dragging := false
-var spacing = 50
 var prev_stored_pos : Vector2
 
 
@@ -91,6 +90,8 @@ func forward_canvas_gui_input(event):
 		elif event.button_index == BUTTON_WHEEL_UP and event.is_pressed():
 			if mouse_right_pressed:
 				dock.paint_radius += 5
+			elif ctrl_pressed and shift_pressed:
+				dock.spacing += 1
 			elif ctrl_pressed:
 				dock.custom_scale *= 1.1
 			elif shift_pressed:
@@ -100,6 +101,8 @@ func forward_canvas_gui_input(event):
 		elif event.button_index == BUTTON_WHEEL_DOWN and event.is_pressed():
 			if mouse_right_pressed:
 				dock.paint_radius -= 5
+			elif ctrl_pressed and shift_pressed:
+				dock.spacing -= 1
 			elif ctrl_pressed:
 				dock.custom_scale /= 1.1
 			elif shift_pressed:
@@ -108,11 +111,10 @@ func forward_canvas_gui_input(event):
 				dock.set_next_texture(-1)
 	if event is InputEventMouseMotion:
 		if mouse_left_pressed and dock.is_painting:
-			if prev_stored_pos != Vector2.ZERO:
-				var dist = (overlay_pos2scene_pos(event.position) - prev_stored_pos).length()
-				if dist > spacing:
-					prev_stored_pos = overlay_pos2scene_pos(event.position)
-					place_new_sprite(prev_stored_pos)
+			var dist = (overlay_pos2scene_pos(event.position) - prev_stored_pos).length()
+			if dist > dock.spacing:
+				prev_stored_pos = overlay_pos2scene_pos(event.position)
+				place_new_sprite(prev_stored_pos)
 	
 		elif mouse_right_pressed and dock.is_painting:
 			erase_sprites(overlay_pos2scene_pos(event.position))
@@ -153,9 +155,13 @@ func forward_canvas_draw_over_viewport(overlay):
 			overlay.draw_rect(drawn_rect, Color(0,1,1,0.3))
 
 
-func draw_paint_circle(overlay, pos):
-	var scaled_radius = dock.paint_radius * view_transform.get_scale().x
-	overlay.draw_circle(pos, scaled_radius, dock.erase_color)
+func draw_paint_circle(overlay : Control, pos : Vector2):
+#	var scaled_radius = dock.paint_radius * view_transform.get_scale().x
+#	overlay.draw_circle(pos, scaled_radius, dock.erase_color)
+	var erase_rect : Rect2
+	erase_rect.size = Vector2(dock.paint_radius, dock.paint_radius) * view_transform.get_scale()
+	erase_rect.position = pos - erase_rect.size/2
+	overlay.draw_rect(erase_rect, dock.erase_color)
 
 
 func draw_next_texture(overlay, mouse_loc_pos):
@@ -201,10 +207,15 @@ func place_new_sprite(global_pos):
 func erase_sprites(mouse_pos):
 	if tex_rect_collection.empty():
 		return
+	var erase_rect : Rect2
+	erase_rect.size = Vector2(dock.paint_radius, dock.paint_radius)
+	erase_rect.position = mouse_pos - erase_rect.size/2
 	for i in range(tex_rect_collection.size()):
 		var rect: Rect2 = tex_rect_collection[i]
 #		print(rect, mouse_pos, rect.has_point(mouse_pos))
-		if rect.has_point(mouse_pos):
+#		rect.has_point(mouse_pos)
+		rect.intersects(erase_rect)
+		if rect.intersects(erase_rect):
 			sub_node.get_child(i).free()
 			tex_rect_collection.remove(i)
 			break
