@@ -1,10 +1,27 @@
 [gd_scene load_steps=2 format=2]
 
-[ext_resource path="res://addons/Painter2D/painter_node.gd" type="Script" id=2]
+[ext_resource path="res://addons/Painter2D/painter_node.gd" type="Script" id=1]
 
 [node name="demo_scene" type="Node2D"]
 
 [node name="decorations" type="Node2D" parent="."]
 
-[node name="Painter2D" type="Node2D" parent="decorations"]
-script = ExtResource( 2 )
+[node name="ciccio" type="Node2D" parent="decorations"]
+script = ExtResource( 1 )
+spacing = 63
+subnode_name = "rocks"
+custom_name = "rock"
+custom_scale = 0.5
+offset_active = true
+tex_collection_selected_ids = [ 0, 1, 2, 3, 4, 5 ]
+tex_collection_path = "res://entities"
+tex_offset_collection = [ [ 0, Vector2( 0, 0.32 ) ], [ 1, Vector2( 0, 0.1 ) ], [ 2, Vector2( 0.05, 0.25 ) ], [ 3, Vector2( -0.05, 0.22 ) ], [ 4, Vector2( -0.11, 0.35 ) ], [ 5, Vector2( 0, 0.16 ) ] ]
+
+[node name="sempronio" type="Node2D" parent="decorations"]
+script = ExtResource( 1 )
+erase_radius = 65
+subnode_name = "sempronio"
+custom_name = "icons"
+tex_collection_selected_ids = [ 0, 1 ]
+
+[node name="rocks" type="Node2D" parent="decorations"]

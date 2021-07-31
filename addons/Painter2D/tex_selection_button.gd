@@ -7,7 +7,7 @@ var id : int = 0
 var texture : Texture
 var tex_file : String
 var tex_folder : String
-var offset_unit : Vector2 = Vector2.ZERO
+var offset_unit : Vector2 = Vector2.ZERO setget set_offset_unit
 var offset_px : Vector2 = Vector2.ZERO
 var offset_tool_visible := true setget set_offset_tool_visible
 var selected := true setget set_selected
@@ -108,4 +108,10 @@ func reset_offset():
 	$hsl.value = 0
 	update_gui()
 
+
+func set_offset_unit(val : Vector2):
+	$vsl.value = -val.y
+	$hsl.value = val.x
+	update_offset_px()
+	move_cross()
 

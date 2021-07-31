@@ -13,9 +13,12 @@ var mode = NextMode.NEXT
 enum NextMode {RAND, NEXT, SINGLE}
 var is_painting := false
 var erase_color : Color = Color.red - Color(0,0,0,0.7)
+var precise_erasing := false #TODO
 
+const highlight_color_on = Color.white - Color(0,0,0,0.5)
+const highlight_color_off = Color(0,0,0,0)
 var spacing = 50 setget set_spacing
-var paint_radius : int = 40 setget set_paint_radius
+var erase_radius : int = 40 setget set_erase_radius
 
 var subnode_name = "decorations"
 var custom_name = ""
@@ -45,7 +48,7 @@ onready var paint_tgg = $tools/paint/activate
 onready var paint_color_selector = $tools/paint/color
 onready var mode_opt = $tools/paint/opt_mode
 onready var spacing_ln = $tools/brush/spac_val
-onready var paint_radius_ln = $tools/brush/del_rad
+onready var erase_radius_ln = $tools/brush/del_rad
 onready var subnode_tgg = $tools/subnode/btn
 onready var subnode_ln = $tools/subnode/val
 onready var name_tgg = $tools/name/btn 
@@ -89,13 +92,14 @@ onready var show_info_btn = $bott/show_info
 #================================= INIT ========================================
 func _ready():
 	connect_everything()
+	initialize()
+
+func initialize():
 	find_all_textures()
-	select_next_texture()
-	
-#	update_vars_from_painter_node()
 	update_settings()
 	update_sprite_grid()
 	update_infos()
+	check_same_tex_id()
 
 
 func connect_everything():
@@ -103,7 +107,7 @@ func connect_everything():
 	mode_opt.connect("item_selected", self, "mode_selected")
 	paint_tgg.connect("toggled",self,"paint_toggled")
 	paint_color_selector.connect("color_changed", self, "paint_circle_color_changed")
-	paint_radius_ln.connect("text_entered", self, "paint_radius_changed")
+	erase_radius_ln.connect("text_entered", self, "erase_radius_changed")
 	spacing_ln.connect("text_changed", self, "set_spacing")
 	
 	subnode_tgg.connect("toggled", self, "subnode_ck_toggled")
@@ -140,8 +144,58 @@ func connect_everything():
 	show_info_btn.connect("pressed", self, "show_hide_infos")
 
 
+var painter_node_vars = ["spacing", "erase_radius",
+"subnode_name", "custom_name",
+"custom_scale", "rand_scale_mult",
+"custom_rot", "rand_rot_mult",
+"tex_collection_selected_ids", "tex_collection_path",
+"offset_active"
+]
+func save_to_painter_node():
+	if not painter_node:
+		print("DOCK:| save_to_painter_node() -> Painter node not defined.")
+		return
+	for var_name in painter_node_vars:
+		painter_node.set(var_name, get(var_name))
+	
+	var tex_offset_collection = []
+	if tex_grid.get_child_count() > 0:
+		for btn in tex_grid.get_children():
+			if btn.offset_unit != Vector2.ZERO:
+				tex_offset_collection.append([btn.id, btn.offset_unit])
+	painter_node.tex_offset_collection = tex_offset_collection
+
+
+func load_from_painter_node():
+#	print("DOCK:| Painter_node selected (%s)"%painter_node.name)
+	if not self.is_inside_tree():
+		yield(self, "ready")
+	for var_name in painter_node_vars:
+#		print("%s: %s"%[var_name, painter_node.get(var_name)])
+		set(var_name, painter_node.get(var_name))
+	
+	find_all_textures()
+	tex_collection_selected_ids = painter_node.tex_collection_selected_ids
+	update_sprite_grid()
+	
+	var tex_offset_collection = painter_node.tex_offset_collection
+	for i in range(tex_offset_collection.size()):
+		var btn = tex_grid.get_child(tex_offset_collection[i][0])
+		btn.offset_unit = tex_offset_collection[i][1]
+	
+	update_selection_for_tex_btns()
+	
+	update_settings()
+	update_infos()
+	check_same_tex_id()
+	print("Painter2D - DOCK:| Settings loaded from painter node (%s)."%painter_node.name)
+	
+
 func find_all_textures():
 	tex_collection = []
+	tex_id = -1
+	next_texture = null
+	
 	var dir = Directory.new()
 	dir.open(tex_collection_path)
 	dir.list_dir_begin()
@@ -191,6 +245,8 @@ func file_path_is_valid(path):
 
 
 func set_next_texture(val = -1):
+	if tex_collection.empty():
+		return
 	randomize_rand_values()
 	
 	if val == -1:
@@ -242,15 +298,15 @@ func select_all_tex(val):
 	if tex_grid.get_child_count() > 0:
 		for btn in tex_grid.get_children():
 			btn.selected = val
-		tex_collection_selected_ids = range(tex_collection.size()) if val else [0]
-		set_next_texture()
+		tex_collection_selected_ids = range(tex_collection.size()) if val else []
+		check_same_tex_id()
 		update_selection_for_tex_btns()
 
 
 #============================== UPDATE GUI =====================================
 func update_settings():
 	paint_tgg.pressed = is_painting
-	paint_radius_ln.text = str(paint_radius)
+	erase_radius_ln.text = str(erase_radius)
 	paint_color_selector.color = erase_color
 	mode_opt.selected = mode
 	spacing_ln.text = str(spacing)
@@ -265,8 +321,8 @@ func update_settings():
 	scale_rand_ln.text = str(rand_scale_mult)
 	
 	rot_ln.text = str(rad2deg(custom_rot))
-	rot_rand_slider.value = rand_rot_mult
-	rot_rand_ln.text = str(rand_rot_mult)
+	rot_rand_slider.value = range_lerp(rand_rot_mult, 0, 1, 0, 180)
+	rot_rand_ln.text = str(rot_rand_slider.value)
 	
 	folder_btn.text = tex_collection_path
 	
@@ -276,6 +332,9 @@ func update_settings():
 func update_sprite_grid():
 	for child in tex_grid.get_children():
 		child.free()
+	
+	if tex_collection.empty():
+		return
 	
 	for id in range(tex_collection.size()):
 		var tex_path = tex_collection[id]
@@ -320,11 +379,11 @@ func paint_circle_color_changed(col):
 func set_spacing(val):
 	spacing = int(val)
 	update_settings()
-func paint_radius_changed(val):
-	paint_radius = int(val)
+func erase_radius_changed(val):
+	erase_radius = int(val)
 	update_settings()
-func set_paint_radius(val):
-	paint_radius = clamp(val, 5, 150)
+func set_erase_radius(val):
+	erase_radius = clamp(val, 5, 1000)
 	update_settings()
 
 func set_custom_scale(val):
@@ -333,6 +392,7 @@ func set_custom_scale(val):
 	update_settings()
 func set_rand_scale(val):
 	rand_scale_mult = clamp(float(val), 0.0, 1.0)
+	randomize_rand_values()
 	update_settings()
 func set_custom_rot(val):
 	custom_rot = val
@@ -343,7 +403,9 @@ func set_custom_rot_degrees(val):
 func increase_custom_rot(val):
 	self.custom_rot += (val)
 func set_rand_rot(val):
-	rand_rot_mult = float(val)
+	rand_rot_mult = range_lerp(float(val), 0, 180, 0, 1)
+	print(rand_rot_mult)
+	randomize_rand_values()
 	update_settings()
 func randomize_rand_values():
 	randomize()
@@ -416,8 +478,18 @@ func settings_visibility_toggled():
 	$settings.visible = !$settings.visible
 
 
-
-
+func highlight_spacing(val):
+	var col = highlight_color_on if val else highlight_color_off
+	$tools/brush/lb_spac.set("custom_colors/font_color_shadow", col)
+func highlight_erase(val):
+	var col = highlight_color_on if val else highlight_color_off
+	$tools/brush/lb_delete.set("custom_colors/font_color_shadow", col)
+func highlight_scale(val):
+	var col = highlight_color_on if val else highlight_color_off
+	$settings/scale/lb.set("custom_colors/font_color_shadow", col)
+func highlight_rotation(val):
+	var col = highlight_color_on if val else highlight_color_off
+	$settings/rotation/lb.set("custom_colors/font_color_shadow", col)
 
 
 
