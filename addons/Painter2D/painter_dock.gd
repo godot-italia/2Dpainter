@@ -155,6 +155,7 @@ func save_to_painter_node():
 	if not painter_node:
 		print("DOCK:| save_to_painter_node() -> Painter node not defined.")
 		return
+	painter_node.is_new = false
 	for var_name in painter_node_vars:
 		painter_node.set(var_name, get(var_name))
 	
@@ -168,6 +169,8 @@ func save_to_painter_node():
 
 func load_from_painter_node():
 #	print("DOCK:| Painter_node selected (%s)"%painter_node.name)
+	if painter_node.is_new:
+		return
 	if not self.is_inside_tree():
 		yield(self, "ready")
 	for var_name in painter_node_vars:

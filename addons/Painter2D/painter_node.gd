@@ -2,6 +2,7 @@ tool
 extends Node2D
 class_name Painter2D, "res://addons/Painter2D/graphics/painter2d_ico.png"
 
+export var is_new := true
 
 export var spacing : int = 50
 export var erase_radius : int = 50

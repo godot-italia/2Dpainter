@@ -74,7 +74,7 @@ func handles(object):
 #				dock.save_to_painter_node()
 			dock.painter_node = painter_node
 #			yield(get_tree(), "idle_frame")
-			dock.load_from_painter_node()
+			dock.call_deferred("load_from_painter_node")
 	elif dock_is_active:
 		remove_control_from_docks(dock)
 		dock.queue_free()
